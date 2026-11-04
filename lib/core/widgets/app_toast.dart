@@ -42,7 +42,10 @@ class AppToastService {
     required AppToastType type,
     required String message,
   }) {
-    _current?.remove();
+    final previous = _current;
+    if (previous != null && previous.mounted) {
+      previous.remove();
+    }
     _current = null;
 
     late OverlayEntry entry;
@@ -60,7 +63,9 @@ class AppToastService {
             message: message,
             scale: scale,
             onDismiss: () {
-              entry.remove();
+              if (entry.mounted) {
+                entry.remove();
+              }
               if (_current == entry) _current = null;
             },
           ),
