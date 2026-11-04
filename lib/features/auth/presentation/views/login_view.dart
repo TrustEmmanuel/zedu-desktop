@@ -141,7 +141,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     loading: authState.isLoading,
                     onPressed: () => ref
                         .read(authNotifierProvider.notifier)
-                        .loginWithGoogle(),
+                        .loginWithGoogle(persist: _rememberMe),
                   ),
                   context.gapV(12),
                   SocialAuthButton(

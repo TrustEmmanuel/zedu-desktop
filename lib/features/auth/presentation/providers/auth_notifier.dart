@@ -585,7 +585,7 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> loginWithGoogle() async {
+  Future<void> loginWithGoogle({bool persist = true}) async {
     AppLogger.d('Google Sign-In attempt', tag: _tag);
     state = state.copyWith(isLoading: true, clearError: true);
 
@@ -671,7 +671,10 @@ class AuthNotifier extends Notifier<AuthState> {
       switch (result) {
         case Success<AuthSession>():
           AppLogger.i('Google Sign-In succeeded — token persisted', tag: _tag);
-          await _storage.saveAccessToken(result.value.accessToken);
+          await _storage.saveAccessToken(
+            result.value.accessToken,
+            persist: persist,
+          );
           _bumpSession();
           _adoptSessionUser(result.value.user);
         case Failure<AuthSession>():

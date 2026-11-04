@@ -25,6 +25,7 @@ class FakeAuthNotifier extends AuthNotifier {
   final Future<void>? _pendingGoogle;
   int signUpCalls = 0;
   int googleCalls = 0;
+  bool? lastGooglePersist;
 
   @override
   AuthState build() => const AuthState(status: AuthStatus.unauthenticated);
@@ -47,8 +48,9 @@ class FakeAuthNotifier extends AuthNotifier {
   }
 
   @override
-  Future<void> loginWithGoogle() async {
+  Future<void> loginWithGoogle({bool persist = true}) async {
     googleCalls++;
+    lastGooglePersist = persist;
     state = state.copyWith(isLoading: true, clearError: true);
     await _pendingGoogle;
     if (failGoogle) {
