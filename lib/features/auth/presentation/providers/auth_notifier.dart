@@ -8,6 +8,10 @@ class AuthNotifier extends Notifier<AuthState> {
   late SecureStorageService _storage;
   late AuthInterceptor _interceptor;
 
+  /// How long [loginWithGoogle] waits for the browser redirect before giving
+  /// up and clearing the loading state.
+  Duration googleSignInWait = const Duration(minutes: 5);
+
   /// Guards against overlapping presence-toggle requests (rapid clicks,
   /// reopening the menu while a request is pending).
   bool _presenceToggleInFlight = false;
@@ -590,6 +594,7 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(isLoading: true, clearError: true);
 
     HttpServer? server;
+    Timer? deadline;
     try {
       final config = locator<AppConfig>();
       const port = 8000; // Standard redirect port for desktop
@@ -614,6 +619,13 @@ class AuthNotifier extends Notifier<AuthState> {
 
       // 3. Wait for Google's redirect containing the authorization code
       String? grantCode;
+      // server.timeout only fires on an established idle connection: a closed
+      // browser tab or a redirect that never arrives leaves no connection, so
+      // cap the whole wait with a deadline that ends the stream and lets the
+      // null-code path below clear isLoading.
+      deadline = Timer(googleSignInWait, () {
+        server?.close(force: true);
+      });
       await for (final request in server.timeout(
         const Duration(seconds: 60),
         onTimeout: (sink) {
@@ -649,6 +661,7 @@ class AuthNotifier extends Notifier<AuthState> {
         await request.response.close();
         break;
       }
+      deadline.cancel();
 
       await server.close();
       server = null;
@@ -694,6 +707,7 @@ class AuthNotifier extends Notifier<AuthState> {
       AppLogger.e('Google Sign-In failed', tag: _tag, error: e);
       state = state.copyWith(isLoading: false, error: 'Google Sign-In failed');
     } finally {
+      deadline?.cancel();
       await server?.close();
     }
   }
