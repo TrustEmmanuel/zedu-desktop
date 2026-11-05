@@ -143,11 +143,21 @@ class ChannelMessageTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 MessageLinkScope(
-                  builder: (context, links) => SelectableText.rich(
-                    links.span(
-                      message.text,
-                      TextStyle(fontSize: 15, color: colors.textPrimary),
-                    ),
+                  builder: (context, links) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SelectableText.rich(
+                        links.span(
+                          message.text,
+                          TextStyle(
+                            fontSize: 15,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      if (links.urls(message.text).isNotEmpty)
+                        LinkPreviewCard(url: links.urls(message.text).first),
+                    ],
                   ),
                 ),
                 if (status != null)

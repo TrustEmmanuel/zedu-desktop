@@ -61,6 +61,16 @@ String _trimMessageUrl(String url) {
 class MessageLinks {
   final Map<String, TapGestureRecognizer> _recognizers = {};
 
+  /// The allowed URLs in [text], trimmed of trailing punctuation, in order.
+  List<String> urls(String text) {
+    final found = <String>[];
+    for (final match in _messageUrlPattern.allMatches(text)) {
+      final url = _trimMessageUrl(match.group(0)!);
+      if (messageLinkUri(url) != null) found.add(url);
+    }
+    return found;
+  }
+
   /// [text] in [style], with each allowed URL underlined and tappable.
   TextSpan span(String text, TextStyle style) {
     final children = <TextSpan>[];
