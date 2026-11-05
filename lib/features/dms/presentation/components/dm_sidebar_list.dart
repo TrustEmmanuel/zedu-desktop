@@ -95,8 +95,8 @@ class _DmSidebarListState extends ConsumerState<DmSidebarList> {
             child: ref
                 .watch(dmListProvider)
                 .when(
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+                  loading: () => Center(
+                    child: CircularProgressIndicator(color: colors.onSidebar),
                   ),
                   error: (err, stack) => Center(
                     child: Text(

@@ -4,6 +4,7 @@ enum UserProfileSection {
   account,
   notifications,
   security,
+  appearance,
   organization,
   userManagement,
   rolesAndPermissions,

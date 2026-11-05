@@ -54,7 +54,7 @@ class UserMenuDialog extends ConsumerWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: colors.textPrimary.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -386,22 +386,23 @@ class _UserMenuAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final url = avatarUrl.trim();
-    if (url.isEmpty) return _initials();
+    if (url.isEmpty) return _initials(colors.onSidebar);
 
     return Image.network(
       url,
       fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => _initials(),
+      errorBuilder: (_, _, _) => _initials(colors.onSidebar),
     );
   }
 
-  Widget _initials() {
+  Widget _initials(Color color) {
     return Center(
       child: Text(
         _initialsFor(displayName),
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: color,
           fontSize: 16,
           fontWeight: FontWeight.w600,
         ),

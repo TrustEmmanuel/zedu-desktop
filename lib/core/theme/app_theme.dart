@@ -18,9 +18,11 @@ abstract final class AppTheme {
     fontVariations: [FontVariation('wght', 600)],
   );
 
-  static final ThemeData light = _build(AppPalette.light, Brightness.light);
+  static final ThemeData light = _build(AppPalette.light);
 
-  static ThemeData _build(AppPalette palette, Brightness brightness) {
+  static final ThemeData dark = _build(AppPalette.dark);
+
+  static ThemeData _build(AppPalette palette) {
     return ThemeData(
       brightness: palette.brightness,
       primaryColor: palette.primary,

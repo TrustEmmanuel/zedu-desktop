@@ -23,7 +23,7 @@ class FileInfoPanel extends ConsumerWidget {
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Close file info',
-    barrierColor: Colors.black26,
+    barrierColor: context.colors.divider,
     transitionDuration: const Duration(milliseconds: 200),
     pageBuilder: (_, _, _) => Align(
       alignment: Alignment.centerRight,

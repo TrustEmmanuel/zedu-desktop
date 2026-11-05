@@ -338,9 +338,9 @@ class _MessageBody extends StatelessWidget {
                             ),
                           ),
                           if (isVideo)
-                            const Icon(
+                            Icon(
                               Icons.play_circle_fill,
-                              color: Colors.white,
+                              color: colors.primary,
                               size: 40,
                             ),
                           Positioned(
@@ -352,8 +352,8 @@ class _MessageBody extends StatelessWidget {
                                 horizontal: 8,
                                 vertical: 6,
                               ),
-                              decoration: const BoxDecoration(
-                                color: Colors.black54,
+                              decoration: BoxDecoration(
+                                color: colors.textSecondary,
                                 borderRadius: BorderRadius.only(
                                   bottomLeft: Radius.circular(8),
                                   bottomRight: Radius.circular(8),
@@ -361,8 +361,8 @@ class _MessageBody extends StatelessWidget {
                               ),
                               child: Text(
                                 fileName,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: colors.background,
                                   fontSize: 11,
                                 ),
                                 maxLines: 1,

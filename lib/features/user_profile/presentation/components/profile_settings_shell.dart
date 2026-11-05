@@ -26,7 +26,7 @@ class ProfileSettingsShell extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -79,7 +79,7 @@ class _ProfileTopBar extends StatelessWidget {
             'assets/pngs/zedu_logo.png',
             width: 82,
             height: 31,
-            color: Colors.white,
+            color: context.colors.onSidebar,
             colorBlendMode: BlendMode.srcIn,
           ),
           const SizedBox(width: 24),
@@ -95,11 +95,11 @@ class _ProfileTopBar extends StatelessWidget {
                 isDense: true,
                 hintText: 'Search messages...',
                 hintStyle: context.textTheme.bodySmall?.copyWith(
-                  color: Colors.white70,
+                  color: context.colors.onSidebar.withValues(alpha: 0.7),
                 ),
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.search,
-                  color: Colors.white,
+                  color: context.colors.onSidebar,
                   size: 18,
                 ),
                 filled: true,
@@ -110,7 +110,9 @@ class _ProfileTopBar extends StatelessWidget {
                 ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
               ),
-              style: context.textTheme.bodySmall?.copyWith(color: Colors.white),
+              style: context.textTheme.bodySmall?.copyWith(
+                color: context.colors.onSidebar,
+              ),
             ),
           ),
           const Spacer(flex: 2),
@@ -149,7 +151,7 @@ class _SettingsNavigation extends StatelessWidget {
                   Text(
                     'Settings',
                     style: context.textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
+                      color: context.colors.onSidebar,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -160,14 +162,14 @@ class _SettingsNavigation extends StatelessWidget {
                         child: Text(
                           userName,
                           style: context.textTheme.bodyMedium?.copyWith(
-                            color: Colors.white,
+                            color: context.colors.onSidebar,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                      const Icon(
+                      Icon(
                         Icons.keyboard_arrow_down,
-                        color: Colors.white70,
+                        color: context.colors.onSidebar.withValues(alpha: 0.7),
                         size: 18,
                       ),
                     ],
@@ -193,6 +195,13 @@ class _SettingsNavigation extends StatelessWidget {
                     label: 'Security',
                     selected: selectedSection == UserProfileSection.security,
                     onTap: () => onSectionSelected(UserProfileSection.security),
+                  ),
+                  _NavigationTile(
+                    icon: Icons.palette_outlined,
+                    label: 'Appearance',
+                    selected: selectedSection == UserProfileSection.appearance,
+                    onTap: () =>
+                        onSectionSelected(UserProfileSection.appearance),
                   ),
                   const SizedBox(height: 18),
                   const _NavigationGroupLabel(label: 'Organization'),
@@ -250,11 +259,15 @@ class _NavigationGroupLabel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          const Icon(Icons.arrow_drop_down, color: Colors.white70, size: 18),
+          Icon(
+            Icons.arrow_drop_down,
+            color: context.colors.onSidebar.withValues(alpha: 0.7),
+            size: 18,
+          ),
           Text(
             label,
             style: context.textTheme.bodySmall?.copyWith(
-              color: Colors.white70,
+              color: context.colors.onSidebar.withValues(alpha: 0.7),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -293,7 +306,11 @@ class _NavigationTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, color: Colors.white70, size: 18),
+              Icon(
+                icon,
+                color: context.colors.onSidebar.withValues(alpha: 0.7),
+                size: 18,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -301,7 +318,7 @@ class _NavigationTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: context.textTheme.bodySmall?.copyWith(
-                    color: Colors.white,
+                    color: context.colors.onSidebar,
                     fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),

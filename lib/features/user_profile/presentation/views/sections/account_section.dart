@@ -67,7 +67,7 @@ class AccountSection extends StatelessWidget {
                 Text(
                   _handle,
                   style: context.textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF6B7280),
+                    color: context.colors.textHint,
                   ),
                 ),
               ],
@@ -94,8 +94,8 @@ class AccountSection extends StatelessWidget {
           expand: false,
           height: 44,
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFFEF4444),
-            side: const BorderSide(color: Color(0xFFEF4444)),
+            foregroundColor: context.colors.error,
+            side: BorderSide(color: context.colors.error),
             padding: const EdgeInsets.symmetric(horizontal: 18),
           ),
           loading: isSaving,
@@ -137,10 +137,10 @@ class _AvatarBlock extends StatelessWidget {
     final fallback = Center(
       child: Text(
         initials,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 56,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF0B7A73),
+          color: context.colors.accent,
         ),
       ),
     );
@@ -149,7 +149,7 @@ class _AvatarBlock extends StatelessWidget {
       height: 144,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: const Color(0xFFE9FBFA),
+        color: context.colors.accent.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
       ),
       child: url.isEmpty

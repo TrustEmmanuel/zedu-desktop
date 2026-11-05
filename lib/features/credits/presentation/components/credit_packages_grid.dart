@@ -15,14 +15,14 @@ class CreditPackagesGrid extends StatelessWidget {
   final void Function(CreditPackage package) onPurchase;
   final String? purchasingPackageId;
 
-  Color _getColorForPackage(String name) {
+  Color _getColorForPackage(AppPalette colors, String name) {
     final lower = name.toLowerCase();
-    if (lower.contains('free')) return const Color(0xFFD1D5DB);
-    if (lower.contains('pro plus')) return const Color(0xFFF59E0B);
-    if (lower.contains('pro')) return const Color(0xFF22C55E);
-    if (lower.contains('business')) return const Color(0xFF8B5CF6);
-    if (lower.contains('enterprise')) return const Color(0xFF0EA5E9);
-    return const Color(0xFF8B5CF6);
+    if (lower.contains('free')) return colors.divider;
+    if (lower.contains('pro plus')) return colors.accent;
+    if (lower.contains('pro')) return colors.success;
+    if (lower.contains('business')) return colors.primary;
+    if (lower.contains('enterprise')) return colors.accent;
+    return colors.primary;
   }
 
   List<CreditPackage> get _displayPackages {
@@ -177,7 +177,7 @@ class CreditPackagesGrid extends StatelessWidget {
             final package = items[index];
             return CreditPackageCard(
               package: package,
-              accentColor: _getColorForPackage(package.name),
+              accentColor: _getColorForPackage(context.colors, package.name),
               isCurrentPlan: _isCurrentPlan(package),
               isLoading: purchasingPackageId == package.id,
               onPurchase: package.isFree || purchasingPackageId != null

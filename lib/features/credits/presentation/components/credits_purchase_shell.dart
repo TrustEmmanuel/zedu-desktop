@@ -12,7 +12,7 @@ class CreditsPurchaseShell extends ConsumerWidget {
     final userName = authState.user?.fullname ?? 'Zedu User';
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -45,9 +45,10 @@ class _CreditsTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       height: 44,
-      color: context.colors.sidebar,
+      color: colors.sidebar,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
@@ -55,7 +56,7 @@ class _CreditsTopBar extends StatelessWidget {
             'assets/pngs/zedu_logo.png',
             width: 82,
             height: 31,
-            color: Colors.white,
+            color: colors.onSidebar,
             colorBlendMode: BlendMode.srcIn,
           ),
           const SizedBox(width: 24),
@@ -71,11 +72,11 @@ class _CreditsTopBar extends StatelessWidget {
                 isDense: true,
                 hintText: 'Search messages...',
                 hintStyle: context.textTheme.bodySmall?.copyWith(
-                  color: Colors.white70,
+                  color: colors.onSidebar.withValues(alpha: 0.70),
                 ),
-                prefixIcon: const Icon(
+                prefixIcon: Icon(
                   Icons.search,
-                  color: Colors.white,
+                  color: colors.onSidebar,
                   size: 18,
                 ),
                 filled: true,
@@ -86,7 +87,9 @@ class _CreditsTopBar extends StatelessWidget {
                 ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
               ),
-              style: context.textTheme.bodySmall?.copyWith(color: Colors.white),
+              style: context.textTheme.bodySmall?.copyWith(
+                color: colors.onSidebar,
+              ),
             ),
           ),
           const Spacer(flex: 2),

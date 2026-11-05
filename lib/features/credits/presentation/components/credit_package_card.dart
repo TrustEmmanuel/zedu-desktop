@@ -23,11 +23,11 @@ class CreditPackageCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.background,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: colors.textPrimary.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -62,14 +62,14 @@ class CreditPackageCard extends StatelessWidget {
                               package.name,
                               style: context.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF111827),
+                                color: colors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               package.description,
                               style: context.textTheme.bodySmall?.copyWith(
-                                color: const Color(0xFF6B7280),
+                                color: colors.textHint,
                               ),
                             ),
                           ],
@@ -120,7 +120,7 @@ class CreditPackageCard extends StatelessWidget {
                                 : package.priceLabel,
                             style: context.textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF111827),
+                              color: colors.textPrimary,
                             ),
                           ),
                         ),
@@ -132,7 +132,7 @@ class CreditPackageCard extends StatelessWidget {
                           child: Text(
                             'per month',
                             style: context.textTheme.bodySmall?.copyWith(
-                              color: const Color(0xFF6B7280),
+                              color: colors.textHint,
                             ),
                           ),
                         ),
@@ -153,7 +153,7 @@ class CreditPackageCard extends StatelessWidget {
                     'Includes:',
                     style: context.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF374151),
+                      color: colors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -170,10 +170,10 @@ class CreditPackageCard extends StatelessWidget {
                               color: colors.primary,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.check,
                               size: 14,
-                              color: Colors.white,
+                              color: colors.onPrimary,
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -181,7 +181,7 @@ class CreditPackageCard extends StatelessWidget {
                             child: Text(
                               benefit,
                               style: context.textTheme.bodyMedium?.copyWith(
-                                color: const Color(0xFF4B5563),
+                                color: colors.textHint,
                                 height: 1.35,
                               ),
                             ),
@@ -203,19 +203,19 @@ class CreditPackageCard extends StatelessWidget {
                         onPressed: isLoading ? null : onPurchase,
                         style: FilledButton.styleFrom(
                           backgroundColor: colors.primary,
-                          foregroundColor: Colors.white,
+                          foregroundColor: colors.onPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         child: isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: colors.onPrimary,
                                 ),
                               )
                             : FittedBox(

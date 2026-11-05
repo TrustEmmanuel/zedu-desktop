@@ -32,7 +32,7 @@ class AppVersionRow extends ConsumerWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: context.textTheme.bodySmall?.copyWith(
-                color: Colors.white70,
+                color: context.colors.onSidebar.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -40,7 +40,7 @@ class AppVersionRow extends ConsumerWidget {
             tooltip: 'Copy version',
             visualDensity: VisualDensity.compact,
             iconSize: 16,
-            color: Colors.white70,
+            color: context.colors.onSidebar.withValues(alpha: 0.7),
             icon: const Icon(Icons.copy),
             onPressed: () => _copy(context, text),
           ),

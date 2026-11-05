@@ -29,7 +29,7 @@ class FilePreviewDialog extends ConsumerStatefulWidget {
     required VoidCallback onOpenExternally,
   }) => showDialog<void>(
     context: context,
-    barrierColor: Colors.black54,
+    barrierColor: context.colors.textSecondary,
     builder: (_) => FilePreviewDialog(
       file: file,
       onDownload: onDownload,

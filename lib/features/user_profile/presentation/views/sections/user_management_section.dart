@@ -231,7 +231,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                       constraints: const BoxConstraints(minWidth: 880),
                       child: DataTable(
                         headingRowColor: WidgetStateProperty.all(
-                          const Color(0xFFFAFAFA),
+                          context.colors.background,
                         ),
                         columns: const [
                           DataColumn(label: Text('Email Address')),
@@ -381,7 +381,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                       constraints: const BoxConstraints(minWidth: 880),
                       child: DataTable(
                         headingRowColor: WidgetStateProperty.all(
-                          const Color(0xFFFAFAFA),
+                          context.colors.background,
                         ),
                         columns: const [
                           DataColumn(label: Text('Email Address')),
@@ -482,7 +482,7 @@ class _TabLabel extends StatelessWidget {
                   fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                   color: active
                       ? context.colors.primary
-                      : const Color(0xFF6B7280),
+                      : context.colors.textHint,
                 ),
               ),
               const SizedBox(width: 8),
@@ -490,8 +490,8 @@ class _TabLabel extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: active
-                      ? const Color(0xFFE9E9FF)
-                      : const Color(0xFFF3F4F6),
+                      ? context.colors.primaryBg
+                      : context.colors.divider,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -499,7 +499,7 @@ class _TabLabel extends StatelessWidget {
                   style: context.textTheme.labelSmall?.copyWith(
                     color: active
                         ? context.colors.primary
-                        : const Color(0xFF6B7280),
+                        : context.colors.textHint,
                     fontSize: 10,
                   ),
                 ),
@@ -528,12 +528,12 @@ class _MemberIdentity extends StatelessWidget {
         Container(
           width: 32,
           height: 32,
-          decoration: const BoxDecoration(
-            color: Color(0xFFE9FBFA),
+          decoration: BoxDecoration(
+            color: context.colors.accent.withValues(alpha: 0.12),
             shape: BoxShape.circle,
           ),
-          child: const Center(
-            child: Icon(Icons.person, size: 18, color: Color(0xFF17C9BD)),
+          child: Center(
+            child: Icon(Icons.person, size: 18, color: context.colors.accent),
           ),
         ),
         const SizedBox(width: 12),

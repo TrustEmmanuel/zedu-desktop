@@ -64,10 +64,10 @@ class _CreateOrganizationViewState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
-            children: const [
-              Icon(Icons.check_circle_outline, color: Colors.white),
-              SizedBox(width: 8),
-              Text('Organization created!'),
+            children: [
+              Icon(Icons.check_circle_outline, color: context.colors.onPrimary),
+              const SizedBox(width: 8),
+              const Text('Organization created!'),
             ],
           ),
           backgroundColor: context.colors.success,
@@ -130,7 +130,7 @@ class _CreateOrganizationViewState
                       hintText: 'Enter your organization name',
                       hintStyle: TextStyle(color: colors.textHint),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: colors.background,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: colors.divider),
@@ -174,7 +174,7 @@ class _CreateOrganizationViewState
                       hintText: 'What does your organization do?',
                       hintStyle: TextStyle(color: colors.textHint),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: colors.background,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: colors.divider),
@@ -242,7 +242,7 @@ class _CreateOrganizationViewState
                         inputDecorationTheme: InputDecorationTheme(
                           hintStyle: TextStyle(color: colors.textHint),
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: colors.background,
                           border: border(colors.divider),
                           enabledBorder: border(colors.divider),
                           focusedBorder: border(colors.primary),
@@ -271,7 +271,7 @@ class _CreateOrganizationViewState
                     onPressed: isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.primary,
-                      foregroundColor: Colors.white,
+                      foregroundColor: colors.onPrimary,
                       disabledBackgroundColor: colors.primary.withValues(
                         alpha: 0.5,
                       ),
@@ -282,13 +282,13 @@ class _CreateOrganizationViewState
                       elevation: 0,
                     ),
                     child: isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                                colors.onPrimary,
                               ),
                             ),
                           )

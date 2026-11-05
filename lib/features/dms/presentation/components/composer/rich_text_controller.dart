@@ -14,6 +14,7 @@ class RichTextController extends TextEditingController {
     return buildInlineMarkdownSpan(
       text,
       style ?? const TextStyle(),
+      palette: context.colors,
       keepMarkers: true,
     );
   }

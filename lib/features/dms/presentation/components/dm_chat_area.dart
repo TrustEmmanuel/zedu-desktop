@@ -410,7 +410,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                           border: Border.all(color: colors.divider),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
+                              color: colors.textPrimary.withValues(alpha: 0.2),
                               blurRadius: 16,
                               offset: const Offset(0, 4),
                             ),
@@ -447,7 +447,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                             IconButton(
                               icon: const Icon(Icons.call_end),
                               tooltip: 'Cancel call',
-                              color: Colors.red,
+                              color: colors.error,
                               onPressed: () {
                                 ref
                                     .read(activeCallProvider.notifier)
@@ -478,10 +478,10 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                         color: colors.primary,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Drop files to attach',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: colors.onPrimary,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -845,8 +845,8 @@ class _DmChatHeader extends StatelessWidget {
             child: conversation.effectiveAvatarUrl == null
                 ? Text(
                     participantInitial,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: colors.onPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
@@ -980,7 +980,13 @@ class _MessageBubble extends ConsumerWidget {
     String text,
     TextStyle defaultStyle,
     MessageLinks links,
-  ) => buildInlineMarkdownSpan(text, defaultStyle, plainText: links.span);
+    AppPalette colors,
+  ) => buildInlineMarkdownSpan(
+    text,
+    defaultStyle,
+    plainText: links.span,
+    palette: colors,
+  );
 
   /// Splits [text] around Markdown thematic breaks: a line that is exactly
   /// `---` at the start of the message or after a blank line. A `---` right
@@ -1003,16 +1009,22 @@ class _MessageBubble extends ConsumerWidget {
     return parts;
   }
 
-  Widget _buildMessageText(String content, TextStyle style) {
+  Widget _buildMessageText(String content, TextStyle style, AppPalette colors) {
     return MessageLinkScope(
-      builder: (context, links) => _buildLinkedText(content, style, links),
+      builder: (context, links) =>
+          _buildLinkedText(content, style, links, colors),
     );
   }
 
-  Widget _buildLinkedText(String content, TextStyle style, MessageLinks links) {
+  Widget _buildLinkedText(
+    String content,
+    TextStyle style,
+    MessageLinks links,
+    AppPalette colors,
+  ) {
     final parts = _splitOnDividers(content);
     if (parts.length == 1) {
-      return RichText(text: _parseRichText(content, style, links));
+      return RichText(text: _parseRichText(content, style, links, colors));
     }
 
     final divider = Divider(
@@ -1032,7 +1044,7 @@ class _MessageBubble extends ConsumerWidget {
             for (var i = 0; i < parts.length; i++) ...[
               if (i > 0) divider,
               if (parts[i].isNotEmpty)
-                RichText(text: _parseRichText(parts[i], style, links)),
+                RichText(text: _parseRichText(parts[i], style, links, colors)),
             ],
           ],
         ),
@@ -1123,8 +1135,8 @@ class _MessageBubble extends ConsumerWidget {
               child: senderAvatarUrl == null || senderAvatarUrl.isEmpty
                   ? Text(
                       senderInitial,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: colors.onPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
@@ -1179,9 +1191,10 @@ class _MessageBubble extends ConsumerWidget {
                       child: _buildMessageText(
                         content,
                         TextStyle(
-                          color: isMe ? Colors.white : colors.textPrimary,
+                          color: isMe ? colors.onPrimary : colors.textPrimary,
                           fontSize: 14,
                         ),
+                        colors,
                       ),
                     ),
                   ),

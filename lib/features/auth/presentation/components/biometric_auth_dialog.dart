@@ -162,7 +162,7 @@ class _BiometricAuthDialogState extends State<BiometricAuthDialog> {
                   label: const Text('Authenticate Now'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: colors.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

@@ -1,3 +1,4 @@
+import 'package:zedu/core/core.dart';
 import 'package:zedu/features/dms/presentation/components/composer/composer.dart';
 
 import '../../../../../../helpers/helpers.dart';
@@ -34,7 +35,11 @@ void main() {
   group('buildInlineMarkdownSpan', () {
     test('bold then italic (***word***) renders bold and italic', () {
       // Toolbar: Bold wraps `test` in **, then Italic wraps that in *.
-      final span = buildInlineMarkdownSpan('***test***', _base);
+      final span = buildInlineMarkdownSpan(
+        '***test***',
+        _base,
+        palette: AppPalette.light,
+      );
 
       expect(_visibleText(span), 'test');
       final run = _visible(span).single;
@@ -48,7 +53,11 @@ void main() {
           '**'
           '*test*'
           '**';
-      final span = buildInlineMarkdownSpan(text, _base);
+      final span = buildInlineMarkdownSpan(
+        text,
+        _base,
+        palette: AppPalette.light,
+      );
 
       expect(_visibleText(span), 'test');
       final run = _visible(span).single;
@@ -58,7 +67,12 @@ void main() {
 
     test('keepMarkers keeps the raw text but hides every marker', () {
       const text = 'say ***hi*** now';
-      final span = buildInlineMarkdownSpan(text, _base, keepMarkers: true);
+      final span = buildInlineMarkdownSpan(
+        text,
+        _base,
+        palette: AppPalette.light,
+        keepMarkers: true,
+      );
 
       // Cursor offsets in the composer index into the raw text.
       expect(span.toPlainText(), text);
@@ -70,7 +84,11 @@ void main() {
     });
 
     test('plain bold, italic, strike and code still work', () {
-      final span = buildInlineMarkdownSpan('**b** *i* ~~s~~ `c`', _base);
+      final span = buildInlineMarkdownSpan(
+        '**b** *i* ~~s~~ `c`',
+        _base,
+        palette: AppPalette.light,
+      );
       final runs = _visible(span);
 
       expect(_visibleText(span), 'b i s c');
@@ -84,32 +102,53 @@ void main() {
     });
 
     test('italic inside bold and bold inside italic both nest', () {
-      final a = _visible(buildInlineMarkdownSpan('**a *b* c**', _base));
+      final a = _visible(
+        buildInlineMarkdownSpan(
+          '**a *b* c**',
+          _base,
+          palette: AppPalette.light,
+        ),
+      );
       expect(a.map((r) => r.$1).join(), 'a b c');
       expect(a.every((r) => _isBold(r.$2)), isTrue);
       expect(_isItalic(a.firstWhere((r) => r.$1 == 'b').$2), isTrue);
       expect(_isItalic(a.firstWhere((r) => r.$1 == 'a ').$2), isFalse);
 
-      final b = _visible(buildInlineMarkdownSpan('*a **b** c*', _base));
+      final b = _visible(
+        buildInlineMarkdownSpan(
+          '*a **b** c*',
+          _base,
+          palette: AppPalette.light,
+        ),
+      );
       expect(b.map((r) => r.$1).join(), 'a b c');
       expect(b.every((r) => _isItalic(r.$2)), isTrue);
       expect(_isBold(b.firstWhere((r) => r.$1 == 'b').$2), isTrue);
     });
 
     test('strike around bold nests; code stays literal', () {
-      final strike = _visible(buildInlineMarkdownSpan('~~**x**~~', _base));
+      final strike = _visible(
+        buildInlineMarkdownSpan('~~**x**~~', _base, palette: AppPalette.light),
+      );
       expect(strike.single.$1, 'x');
       expect(_isBold(strike.single.$2), isTrue);
       expect(strike.single.$2.decoration, TextDecoration.lineThrough);
 
-      final code = _visible(buildInlineMarkdownSpan('`**x**`', _base));
+      final code = _visible(
+        buildInlineMarkdownSpan('`**x**`', _base, palette: AppPalette.light),
+      );
       expect(code.single.$1, '**x**');
       expect(_isBold(code.single.$2), isFalse);
     });
 
     test('bold-italic works next to other text, emoji and newlines', () {
       const text = '👋 ***héllo wörld 🎉***\nnext ***line***';
-      final span = buildInlineMarkdownSpan(text, _base, keepMarkers: true);
+      final span = buildInlineMarkdownSpan(
+        text,
+        _base,
+        palette: AppPalette.light,
+        keepMarkers: true,
+      );
 
       expect(span.toPlainText(), text);
       expect(_visibleText(span), '👋 héllo wörld 🎉\nnext line');
@@ -121,7 +160,12 @@ void main() {
 
     test('empty markers from a collapsed toolbar click show nothing', () {
       for (final text in ['**', '****', '******']) {
-        final span = buildInlineMarkdownSpan(text, _base, keepMarkers: true);
+        final span = buildInlineMarkdownSpan(
+          text,
+          _base,
+          palette: AppPalette.light,
+          keepMarkers: true,
+        );
         expect(span.toPlainText(), text);
         expect(_visibleText(span), '', reason: text);
       }
@@ -129,19 +173,35 @@ void main() {
 
     test('unmatched markers stay as plain text', () {
       for (final text in ['a * b', '***x', '2*3', '*open']) {
-        final span = buildInlineMarkdownSpan(text, _base);
+        final span = buildInlineMarkdownSpan(
+          text,
+          _base,
+          palette: AppPalette.light,
+        );
         expect(_visibleText(span), text, reason: text);
       }
     });
 
     test('empty text gives an empty span', () {
-      expect(buildInlineMarkdownSpan('', _base).toPlainText(), '');
+      expect(
+        buildInlineMarkdownSpan(
+          '',
+          _base,
+          palette: AppPalette.light,
+        ).toPlainText(),
+        '',
+      );
     });
 
     test('long text with many markers stays fast', () {
       final text = List.filled(2000, '***word*** *a* **b** ').join();
       final watch = Stopwatch()..start();
-      final span = buildInlineMarkdownSpan(text, _base, keepMarkers: true);
+      final span = buildInlineMarkdownSpan(
+        text,
+        _base,
+        palette: AppPalette.light,
+        keepMarkers: true,
+      );
       watch.stop();
 
       expect(span.toPlainText(), text);

@@ -104,8 +104,8 @@ class OrganizationSection extends StatelessWidget {
               expand: false,
               height: 44,
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFEF4444),
-                side: const BorderSide(color: Color(0xFFEF4444)),
+                foregroundColor: context.colors.error,
+                side: BorderSide(color: context.colors.error),
                 padding: const EdgeInsets.symmetric(horizontal: 18),
               ),
               loading: isSaving,
@@ -155,7 +155,7 @@ class _OrganizationAvatar extends StatelessWidget {
       width: 120,
       height: 120,
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
+        color: context.colors.divider,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Center(

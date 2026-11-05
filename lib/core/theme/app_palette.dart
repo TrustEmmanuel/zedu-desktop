@@ -6,6 +6,7 @@ class AppPalette {
   final Color sidebar;
   final Color accent;
   final Color onPrimary;
+  final Color onSidebar;
   final Color background;
   final Color textPrimary;
   final Color textSecondary;
@@ -30,6 +31,7 @@ class AppPalette {
     required this.sidebar,
     required this.accent,
     required this.onPrimary,
+    required this.onSidebar,
     required this.background,
     required this.textPrimary,
     required this.textSecondary,
@@ -51,6 +53,7 @@ class AppPalette {
     sidebar: Color(0xFF4848AD),
     accent: Color(0xFF5CCBBA),
     onPrimary: Color(0xFFFFFFFF),
+    onSidebar: Color(0xFFFFFFFF),
     background: Color(0xFFFCFBFF),
     textPrimary: Color(0xFF1E1E1E),
     textSecondary: Color(0xFF0A090B),
@@ -64,5 +67,27 @@ class AppPalette {
     primaryBg: Color(0xFFF3EFFF),
     presenceActive: Color(0xFF22C55E),
     presenceAway: Color(0x661E1E1E),
+  );
+
+  static const dark = AppPalette(
+    brightness: Brightness.dark,
+    primary: Color(0xFFA5A0FF),
+    sidebar: Color(0xFF1B1B36),
+    accent: Color(0xFF5CCBBA),
+    onPrimary: Color(0xFF17171F),
+    onSidebar: Color(0xFFFFFFFF),
+    background: Color(0xFF131318),
+    textPrimary: Color(0xFFF4F4F6),
+    textSecondary: Color(0xFFB9B9C3),
+    textHint: Color(0xFF8F8F9A),
+    borderOutline: Color(0xFF6B6B7E),
+    divider: Color(0xFF2A2A33),
+    success: Color(0xFF4ADE80),
+    successBg: Color(0xFF0F2A1B),
+    error: Color(0xFFF87171),
+    errorBg: Color(0xFF2E1212),
+    primaryBg: Color(0xFF221F3D),
+    presenceActive: Color(0xFF22C55E),
+    presenceAway: Color(0x66FFFFFF),
   );
 }

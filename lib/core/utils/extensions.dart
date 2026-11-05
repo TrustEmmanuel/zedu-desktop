@@ -1,9 +1,9 @@
 import 'package:zedu/core/core.dart';
 
 extension AppPaletteX on BuildContext {
-  AppPalette get colors => Theme.of(this).brightness == Brightness.light
-      ? AppPalette.light
-      : AppPalette.dark;
+  AppPalette get colors => Theme.of(this).brightness == Brightness.dark
+      ? AppPalette.dark
+      : AppPalette.light;
 }
 
 extension ThemeX on BuildContext {

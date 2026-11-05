@@ -29,6 +29,7 @@ final _inlineMarkdown = RegExp(
 TextSpan buildInlineMarkdownSpan(
   String text,
   TextStyle style, {
+  required AppPalette palette,
   bool keepMarkers = false,
   TextSpan Function(String text, TextStyle style)? plainText,
 }) {
@@ -40,6 +41,7 @@ TextSpan buildInlineMarkdownSpan(
       style,
       keepMarkers,
       plainText ?? (text, style) => TextSpan(text: text, style: style),
+      palette,
     ),
   );
 }
@@ -49,6 +51,7 @@ List<InlineSpan> _inlineSpans(
   TextStyle style,
   bool keepMarkers,
   TextSpan Function(String text, TextStyle style) plainText,
+  AppPalette palette,
 ) {
   final spans = <InlineSpan>[];
   final hiddenStyle = style.copyWith(color: Colors.transparent, fontSize: 0.01);
@@ -59,7 +62,13 @@ List<InlineSpan> _inlineSpans(
     ];
     if (inner.isNotEmpty) {
       if (nest) {
-        final nested = _inlineSpans(inner, innerStyle, keepMarkers, plainText);
+        final nested = _inlineSpans(
+          inner,
+          innerStyle,
+          keepMarkers,
+          plainText,
+          palette,
+        );
         parts.add(
           nested.length == 1 ? nested.single : TextSpan(children: nested),
         );
@@ -98,8 +107,8 @@ List<InlineSpan> _inlineSpans(
         code,
         style.copyWith(
           fontFamily: 'monospace',
-          backgroundColor: const Color(0x1A6458F5),
-          color: const Color(0xFF6458F5),
+          backgroundColor: palette.primary.withValues(alpha: 0.10),
+          color: palette.primary,
         ),
         false,
       );
