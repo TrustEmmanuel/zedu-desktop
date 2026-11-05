@@ -65,6 +65,8 @@ abstract class FilesRemoteDataSource {
   Future<void> pinFile(String fileId);
 
   Future<void> unpinFile(String fileId);
+
+  Future<void> renameFolder({required String id, required String name});
 }
 
 /// Reads `current_page` and `total_pages_count` (or `total_pages`).
@@ -363,5 +365,14 @@ class FilesRemoteDataSourceImpl implements FilesRemoteDataSource {
   @override
   Future<void> unpinFile(String fileId) async {
     await apiBaseService.delete<dynamic>(path: '/files/file/$fileId/pin');
+  }
+
+  /// Renames the folder with [id], as the web app does.
+  @override
+  Future<void> renameFolder({required String id, required String name}) async {
+    await apiBaseService.put<Map<String, dynamic>>(
+      path: '/files/folders/$id',
+      data: {'folder_name': name},
+    );
   }
 }

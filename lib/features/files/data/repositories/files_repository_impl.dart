@@ -71,6 +71,12 @@ class FilesRepositoryImpl implements FilesRepository {
     ),
   );
 
+  @override
+  Future<Result<void>> renameFolder({
+    required String id,
+    required String name,
+  }) => _guard(() => remoteDataSource.renameFolder(id: id, name: name));
+
   Future<Result<T>> _guard<T>(Future<T> Function() call) async {
     try {
       return Success(await call());

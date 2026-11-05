@@ -82,6 +82,26 @@ class FilesNotifier extends Notifier<FilesState> {
     if (page < 1) return;
     state = _with(folderPage: page);
   }
+
+  /// Updates a renamed folder inside the open path.
+  void renameInPath(String id, String name) {
+    final depth = state.folderPath.indexWhere((f) => f.id == id);
+    if (depth < 0) return;
+    final old = state.folderPath[depth];
+    state = _with(
+      folderPath: [
+        ...state.folderPath.sublist(0, depth),
+        FileFolder(
+          id: old.id,
+          name: name,
+          userId: old.userId,
+          itemCount: old.itemCount,
+          createdAt: old.createdAt,
+        ),
+        ...state.folderPath.sublist(depth + 1),
+      ],
+    );
+  }
 }
 
 /// The current page of files for the Files page's query.
@@ -212,6 +232,34 @@ class FilesActionsNotifier extends Notifier<FilesActionsState> {
         return error.message.isNotEmpty
             ? error.message
             : 'Could not create the folder. Try again.';
+    }
+  }
+
+  /// Renames the folder [id] to [name]. Returns an error message, or null
+  /// when it worked.
+  Future<String?> renameFolder(String id, String name) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return 'Enter a folder name.';
+    if (state.isCreatingFolder) return null;
+
+    state = FilesActionsState(
+      uploadsLeft: state.uploadsLeft,
+      isCreatingFolder: true,
+    );
+    final result = await ref
+        .read(filesRepositoryProvider)
+        .renameFolder(id: id, name: trimmed);
+    if (!ref.mounted) return null;
+    state = FilesActionsState(uploadsLeft: state.uploadsLeft);
+    switch (result) {
+      case Success():
+        ref.read(filesProvider.notifier).renameInPath(id, trimmed);
+        ref.invalidate(foldersListProvider);
+        return null;
+      case Failure(:final error):
+        return error.message.isNotEmpty
+            ? error.message
+            : 'Could not rename the folder. Try again.';
     }
   }
 }

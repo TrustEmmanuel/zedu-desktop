@@ -26,3 +26,4 @@ export 'presentation/widgets/files_toolbar.dart';
 export 'presentation/widgets/move_file_dialog.dart';
 export 'presentation/widgets/rename_file_dialog.dart';
 export 'presentation/widgets/share_file_dialog.dart';
+export 'presentation/widgets/rename_folder_dialog.dart';

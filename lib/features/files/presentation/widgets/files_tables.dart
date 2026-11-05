@@ -178,11 +178,13 @@ class FoldersTable extends StatelessWidget {
     required this.folders,
     required this.ownerNameOf,
     required this.onOpen,
+    this.onRename,
   });
 
   final List<FileFolder> folders;
   final String Function(String userId) ownerNameOf;
   final ValueChanged<FileFolder> onOpen;
+  final ValueChanged<FileFolder>? onRename;
 
   @override
   Widget build(BuildContext context) {
@@ -204,6 +206,23 @@ class FoldersTable extends StatelessWidget {
             context,
             Icon(Icons.folder, color: colors.primary, size: 22),
             folder.name,
+            trailing: onRename == null
+                ? null
+                : IconButton(
+                    tooltip: 'Rename folder',
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 32,
+                      height: 32,
+                    ),
+                    icon: Icon(
+                      Icons.edit_outlined,
+                      size: 16,
+                      color: colors.textSecondary,
+                    ),
+                    onPressed: () => onRename!(folder),
+                  ),
           ),
           _cellText(context, ownerNameOf(folder.userId)),
           _cellText(context, formatFileDate(folder.createdAt)),

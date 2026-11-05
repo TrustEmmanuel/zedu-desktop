@@ -65,4 +65,7 @@ abstract class FilesRepository {
   Future<Result<void>> pinFile(String fileId);
 
   Future<Result<void>> unpinFile(String fileId);
+
+  /// Renames the folder [id] to [name].
+  Future<Result<void>> renameFolder({required String id, required String name});
 }

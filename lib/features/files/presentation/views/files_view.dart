@@ -222,6 +222,7 @@ class _FoldersSection extends ConsumerWidget {
               folders: page.folders,
               ownerNameOf: ownerName,
               onOpen: notifier.openFolder,
+              onRename: (folder) => _renameFolder(context, folder),
             ),
             if (page.totalPages > 1)
               _Pagination(
@@ -525,6 +526,19 @@ Future<void> _newFolder(BuildContext context) async {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Folder created')));
+  }
+}
+
+Future<void> _renameFolder(BuildContext context, FileFolder folder) async {
+  final renamed = await RenameFolderDialog.show(
+    context,
+    folderId: folder.id,
+    currentName: folder.name,
+  );
+  if (renamed && context.mounted) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Folder renamed')));
   }
 }
 
