@@ -77,6 +77,23 @@ class DmRepository {
         .toList();
   }
 
+  /// Pinned messages for the conversation, newest first, with the pinned
+  /// content embedded in each record.
+  Future<List<Map<String, dynamic>>> getPinnedMessages(String channelId) async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      path: '/channels/pin/$channelId',
+    );
+
+    final data = response.data;
+    final rawList = data['data'] ?? data['messages'] ?? data['pins'];
+    if (rawList is! List) return const [];
+
+    return rawList
+        .whereType<Map<dynamic, dynamic>>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  }
+
   /// Opens (or creates) the direct message with [participantId].
   Future<({String channelId, String participantId})> openConversation({
     required String orgId,

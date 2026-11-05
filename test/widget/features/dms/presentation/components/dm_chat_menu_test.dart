@@ -7,6 +7,8 @@ class MockChatHistory extends Mock implements ChatHistoryNotifier {}
 
 class MockDraftStore extends Mock implements DmDraftStore {}
 
+class MockDmRepository extends Mock implements DmRepository {}
+
 class _FakeAuthNotifier extends AuthNotifier {
   @override
   AuthState build() => const AuthState();
@@ -16,6 +18,7 @@ Future<void> _pumpChatArea(
   WidgetTester tester, {
   String username = 'Menu Tester',
   String? participantEmail,
+  DmRepository? repository,
 }) async {
   tester.view.physicalSize = const Size(1280, 900);
   tester.view.devicePixelRatio = 1;
@@ -38,6 +41,8 @@ Future<void> _pumpChatArea(
         authNotifierProvider.overrideWith(_FakeAuthNotifier.new),
         chatHistoryProvider('chat-1').overrideWith((ref) => history),
         dmDraftStoreProvider.overrideWith((ref) => drafts),
+        if (repository != null)
+          dmRepositoryProvider.overrideWithValue(repository),
       ],
       child: buildTestMaterialApp(
         Scaffold(
@@ -171,6 +176,34 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(Dialog), findsNothing);
+      await _unmount(tester);
+    });
+  });
+
+  group('Pinned messages', () {
+    testWidgets('opens the pinned messages dialog from the menu', (
+      tester,
+    ) async {
+      final repository = MockDmRepository();
+      when(() => repository.getPinnedMessages('chat-1')).thenAnswer(
+        (_) async => [
+          {
+            'thread_id': 't-1',
+            'message': 'pinned hi',
+            'type': 'thread',
+            'username': 'ada',
+          },
+        ],
+      );
+      await _pumpChatArea(tester, repository: repository);
+      await tester.tap(find.byTooltip('More options'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Pinned messages'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PinnedMessagesDialog), findsOneWidget);
+      expect(find.text('pinned hi'), findsOneWidget);
       await _unmount(tester);
     });
   });

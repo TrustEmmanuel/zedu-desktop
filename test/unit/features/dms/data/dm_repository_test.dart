@@ -199,4 +199,54 @@ void main() {
       );
     });
   });
+
+  group('DmRepository.getPinnedMessages', () {
+    test('reads the pinned records from the pin route', () async {
+      when(
+        () => api.get<Map<String, dynamic>>(path: '/channels/pin/ch-1'),
+      ).thenAnswer(
+        (_) async => const ApiResponseModel<Map<String, dynamic>>(
+          statusCode: 200,
+          data: {
+            'data': [
+              {
+                'thread_id': 't-1',
+                'message': '<p>pinned hello</p>',
+                'type': 'thread',
+                'username': 'ada',
+              },
+              {
+                'thread_id': 't-1',
+                'message_id': 'r-2',
+                'message': 'pinned reply',
+                'type': 'reply',
+                'username': 'bee',
+              },
+            ],
+          },
+        ),
+      );
+
+      final pinned = await repository.getPinnedMessages('ch-1');
+
+      expect(pinned, hasLength(2));
+      expect(pinned.first['thread_id'], 't-1');
+      expect(pinned.first['type'], 'thread');
+      expect(pinned.last['message_id'], 'r-2');
+      expect(pinned.last['type'], 'reply');
+    });
+
+    test('returns an empty list when the response has no records', () async {
+      when(
+        () => api.get<Map<String, dynamic>>(path: '/channels/pin/ch-1'),
+      ).thenAnswer(
+        (_) async => const ApiResponseModel<Map<String, dynamic>>(
+          statusCode: 200,
+          data: <String, dynamic>{},
+        ),
+      );
+
+      expect(await repository.getPinnedMessages('ch-1'), isEmpty);
+    });
+  });
 }

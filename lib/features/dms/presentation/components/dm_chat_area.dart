@@ -15,6 +15,14 @@ class DmChatArea extends ConsumerStatefulWidget {
 class _DmChatAreaState extends ConsumerState<DmChatArea> {
   bool _isDragging = false;
   final _composerKey = GlobalKey<DmMessageComposerState>();
+  final _scrollController = ScrollController();
+  final _messageKeys = <String, GlobalKey>{};
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   String get _recipientHandle {
     final parts = widget.conversation.displayName
@@ -97,6 +105,8 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
         ref
             .read(dmConversationActionsProvider.notifier)
             .togglePinned(conversation.channelId);
+      case 'pinned_messages':
+        await _showPinnedMessages();
       case 'search_in_conversation':
         await _showConversationSearch();
       case 'view_files':
@@ -203,6 +213,106 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
     );
   }
 
+  Future<void> _showPinnedMessages() async {
+    final record = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => PinnedMessagesDialog(
+        channelId: widget.conversation.channelId,
+        conversationName: widget.conversation.displayName,
+      ),
+    );
+    if (record == null || !mounted) return;
+
+    final targetId = _pinnedTargetId(record);
+    if (targetId == null) return;
+    await _jumpToMessage(targetId);
+  }
+
+  String? _pinnedTargetId(Map<String, dynamic> record) {
+    final messageId = record['message_id']?.toString();
+    if (messageId != null && messageId.isNotEmpty) return messageId;
+    final threadId = record['thread_id']?.toString();
+    if (threadId != null && threadId.isNotEmpty) return threadId;
+    return record['id']?.toString();
+  }
+
+  /// The messages the list shows: newest first, without own-space system
+  /// events.
+  List<Map<String, dynamic>> _visibleMessages(ChatHistoryNotifier history) {
+    return _isOwnSpace
+        ? history.messages
+              .where((message) => !_isOwnSpaceSystemEvent(message))
+              .toList()
+        : history.messages;
+  }
+
+  /// Scrolls the message list to [messageId], loading the remaining pages
+  /// first when the message is not loaded yet. The list lays out lazily, so
+  /// the scroll steps towards the estimated position until the bubble is
+  /// built and can be brought into view.
+  Future<void> _jumpToMessage(String messageId) async {
+    final history = ref.read(
+      chatHistoryProvider(widget.conversation.channelId),
+    );
+    final isLoaded = history.messages.any(
+      (m) => m['id']?.toString() == messageId,
+    );
+    if (!isLoaded) {
+      await history.loadAll();
+      final stillMissing = !history.messages.any(
+        (m) => m['id']?.toString() == messageId,
+      );
+      if (stillMissing) {
+        if (mounted) {
+          _showActionNotice("Couldn't find that message in this conversation.");
+        }
+        return;
+      }
+    }
+
+    final key = _messageKeys[messageId];
+    if (key == null || !_scrollController.hasClients) return;
+
+    final messages = _visibleMessages(history);
+    final targetIndex = messages.indexWhere(
+      (m) => m['id']?.toString() == messageId,
+    );
+    if (targetIndex == -1) return;
+
+    final position = _scrollController.position;
+    final maxExtent = position.maxScrollExtent;
+    if (messages.length > 1 && maxExtent > 0) {
+      final estimate = maxExtent * (targetIndex / (messages.length - 1));
+      _scrollController.jumpTo(estimate.clamp(0.0, maxExtent));
+    }
+
+    // Walk towards older messages (down) and, if the target turns out to be
+    // newer, back up, until the lazy list builds the target bubble.
+    var guard = 0;
+    var direction = 1;
+    while (key.currentContext == null && guard < 120) {
+      final position = _scrollController.position;
+      final bottom = position.maxScrollExtent;
+      if (direction == 1 && position.pixels >= bottom - 1) direction = -1;
+      final step = position.viewportDimension * 0.8 * direction;
+      final next = (position.pixels + step).clamp(0.0, bottom);
+      if ((next - position.pixels).abs() < 1) break;
+      _scrollController.jumpTo(next);
+      await WidgetsBinding.instance.endOfFrame;
+      guard++;
+    }
+
+    final targetContext = key.currentContext;
+    if (targetContext != null && targetContext.mounted) {
+      await Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        alignment: 0.3,
+      );
+    }
+  }
+
   void _showActionNotice(String message) {
     ScaffoldMessenger.of(
       context,
@@ -254,13 +364,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                         chatHistoryProvider(widget.conversation.channelId),
                       );
                       final isOwnSpace = _isOwnSpace;
-                      final messages = isOwnSpace
-                          ? historyState.messages
-                                .where(
-                                  (message) => !_isOwnSpaceSystemEvent(message),
-                                )
-                                .toList()
-                          : historyState.messages;
+                      final messages = _visibleMessages(historyState);
 
                       return NotificationListener<ScrollNotification>(
                         onNotification: (ScrollNotification scrollInfo) {
@@ -281,6 +385,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                           return false;
                         },
                         child: CustomScrollView(
+                          controller: _scrollController,
                           reverse: true,
                           slivers: [
                             SliverPadding(
@@ -294,13 +399,20 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                                   index,
                                 ) {
                                   final msg = messages[index];
-                                  return _MessageBubble(
-                                    message: msg,
-                                    conversation: widget.conversation,
-                                    channelId: widget.conversation.channelId,
-                                    onEdit: (id, text) => _composerKey
-                                        .currentState
-                                        ?.enterEditMode(id, text),
+                                  final messageId = msg['id']?.toString();
+                                  return KeyedSubtree(
+                                    key: _messageKeys.putIfAbsent(
+                                      messageId ?? 'message-$index',
+                                      GlobalKey.new,
+                                    ),
+                                    child: _MessageBubble(
+                                      message: msg,
+                                      conversation: widget.conversation,
+                                      channelId: widget.conversation.channelId,
+                                      onEdit: (id, text) => _composerKey
+                                          .currentState
+                                          ?.enterEditMode(id, text),
+                                    ),
                                   );
                                 }, childCount: messages.length),
                               ),
