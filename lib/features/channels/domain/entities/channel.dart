@@ -9,6 +9,7 @@ class Channel {
   final int unreadCount;
   final int membersCount;
   final String? topic;
+  final String? createdAt;
 
   Channel({
     required this.id,
@@ -21,6 +22,7 @@ class Channel {
     this.unreadCount = 0,
     this.membersCount = 0,
     this.topic,
+    this.createdAt,
   });
 
   factory Channel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,7 @@ class Channel {
       topic: json['topic'] as String?,
       unreadCount: json['unread_count'] as int? ?? 0,
       membersCount: json['members_count'] as int? ?? 0,
+      createdAt: json['created_at'] as String?,
     );
   }
 
@@ -65,6 +68,7 @@ class Channel {
     int? unreadCount,
     int? membersCount,
     String? topic,
+    String? createdAt,
   }) {
     return Channel(
       id: id ?? this.id,
@@ -77,6 +81,7 @@ class Channel {
       unreadCount: unreadCount ?? this.unreadCount,
       membersCount: membersCount ?? this.membersCount,
       topic: topic ?? this.topic,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

@@ -442,16 +442,48 @@ class HomeChatArea extends ConsumerWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              '# $channelName',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colors.textPrimary,
-              ),
-            ),
+            child: channel == null
+                ? Text(
+                    '# $channelName',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: colors.textPrimary,
+                    ),
+                  )
+                : InkWell(
+                    key: const ValueKey('channel-header-title'),
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => ChannelDetailsDialog(channel: channel),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '# $channelName',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.expand_more,
+                          size: 20,
+                          color: colors.textHint,
+                        ),
+                      ],
+                    ),
+                  ),
           ),
           _HeaderAction(icon: Icons.headphones_outlined, label: 'Start Buzz'),
           const SizedBox(width: 12),
@@ -517,7 +549,7 @@ class _ChannelHeaderMenu extends ConsumerWidget {
       position: PopupMenuPosition.under,
       icon: Icon(Icons.more_vert, color: colors.textHint),
       onSelected: (value) {
-        if (value == 'leave') _confirmLeave(context, ref);
+        if (value == 'leave') confirmAndLeaveChannel(context, ref, channel);
       },
       itemBuilder: (_) => [
         PopupMenuItem(
@@ -532,63 +564,6 @@ class _ChannelHeaderMenu extends ConsumerWidget {
         ),
       ],
     );
-  }
-
-  Future<void> _confirmLeave(BuildContext context, WidgetRef ref) async {
-    final colors = context.colors;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('Leave #${channel.name}?'),
-        content: Text(
-          channel.isPrivate
-              ? 'You will stop getting its messages, and someone will need to '
-                    'add you again to rejoin.'
-              : 'You will stop getting its messages. You can join it again '
-                    'from the channel directory.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text('Leave', style: TextStyle(color: colors.error)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-
-    final overlay = Overlay.of(context, rootOverlay: true);
-    final result = await ref
-        .read(channelProvider.notifier)
-        .leaveChannel(channel.id);
-
-    switch (result) {
-      case Success<void>():
-        // Open another channel so the header never shows one we left.
-        final remaining = ref.read(channelProvider).value ?? const <Channel>[];
-        ref
-            .read(activeChatProvider.notifier)
-            .selectChannel(
-              remaining.isEmpty ? 'general' : remaining.first.name,
-            );
-        AppToastService.showWith(
-          overlay,
-          type: AppToastType.success,
-          message: 'You left #${channel.name}',
-        );
-      case Failure<void>(:final error):
-        AppToastService.showWith(
-          overlay,
-          type: AppToastType.error,
-          message: error.message.isEmpty
-              ? 'Could not leave #${channel.name}'
-              : error.message,
-        );
-    }
   }
 }
 

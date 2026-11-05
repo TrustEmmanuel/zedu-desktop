@@ -277,6 +277,41 @@ void main() {
       expect(find.text('# random'), findsOneWidget);
       await tester.pump(const Duration(seconds: 5));
     });
+
+    testWidgets('tapping the channel header opens the details dialog', (
+      tester,
+    ) async {
+      await pumpSidebarAndChat(tester);
+
+      await tester.tap(find.byKey(const ValueKey('channel-header-title')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('DESCRIPTION'), findsOneWidget);
+      expect(find.text('No description yet.'), findsOneWidget);
+      expect(find.text('ada'), findsOneWidget);
+    });
+
+    testWidgets('leaving from the details dialog removes the channel', (
+      tester,
+    ) async {
+      final repository = _LeavingChannelRepository(const Success(null));
+      await pumpSidebarAndChat(tester, repository: repository);
+
+      await tester.tap(find.text('random'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('channel-header-title')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Leave channel'));
+      await tester.pumpAndSettle();
+      expect(find.text('Leave #random?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Leave'));
+      await tester.pumpAndSettle();
+
+      expect(repository.left, ['channel-random']);
+      expect(find.text('# general'), findsOneWidget);
+      expect(find.text('You left #random'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
+    });
   });
 
   group('ResizableSidebar', () {
