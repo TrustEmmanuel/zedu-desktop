@@ -96,8 +96,27 @@ void main() {
       ),
     );
 
-    final folders = await container.read(moveTargetFoldersProvider.future);
+    final folders = await container.read(moveTargetFoldersProvider(null).future);
 
     expect(folders.map((f) => f.id), ['docs', 'reports']);
+  });
+
+  test('move targets for a parent are that folder children', () async {
+    const logos = FileFolder(id: 'logos', name: 'logos');
+    when(
+      () => repository.fetchFolders(
+        view: FilesScope.all,
+        parentId: 'docs',
+        page: 1,
+      ),
+    ).thenAnswer(
+      (_) async => const Success(FoldersPage(folders: [logos])),
+    );
+
+    final folders = await container.read(
+      moveTargetFoldersProvider('docs').future,
+    );
+
+    expect(folders.map((f) => f.id), ['logos']);
   });
 }

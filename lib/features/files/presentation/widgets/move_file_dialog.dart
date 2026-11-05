@@ -24,6 +24,8 @@ class MoveFileDialog extends ConsumerStatefulWidget {
 class _MoveFileDialogState extends ConsumerState<MoveFileDialog> {
   FileFolder? _selected;
   String? _error;
+  String? _parentId;
+  final List<FileFolder> _breadcrumb = [];
 
   Future<void> _move() async {
     final folder = _selected;
@@ -40,13 +42,31 @@ class _MoveFileDialogState extends ConsumerState<MoveFileDialog> {
     }
   }
 
+  void _drillIn(FileFolder folder) {
+    setState(() {
+      _breadcrumb.add(folder);
+      _parentId = folder.id;
+      _selected = null;
+      _error = null;
+    });
+  }
+
+  void _goUp() {
+    setState(() {
+      _breadcrumb.removeLast();
+      _parentId = _breadcrumb.isEmpty ? null : _breadcrumb.last.id;
+      _selected = null;
+      _error = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final isMoving = ref.watch(
       fileMovesProvider.select((ids) => ids.contains(widget.file.id)),
     );
-    final folders = ref.watch(moveTargetFoldersProvider);
+    final folders = ref.watch(moveTargetFoldersProvider(_parentId));
     final textStyle = context.textTheme.bodyMedium?.copyWith(
       fontSize: 13,
       color: colors.textSecondary,
@@ -87,6 +107,28 @@ class _MoveFileDialogState extends ConsumerState<MoveFileDialog> {
               const SizedBox(height: 4),
               Text('Choose a folder to move it to.', style: textStyle),
               const SizedBox(height: 12),
+              if (_breadcrumb.isNotEmpty) ...[
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, size: 18),
+                      color: colors.textPrimary,
+                      tooltip: 'Back to ${_breadcrumb.length == 1 ? 'all folders' : _breadcrumb[_breadcrumb.length - 2].name}',
+                      onPressed: _goUp,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        'Inside ${_breadcrumb.last.name}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textStyle,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+              ],
               Flexible(
                 child: folders.when(
                   loading: () => Padding(
@@ -97,48 +139,74 @@ class _MoveFileDialogState extends ConsumerState<MoveFileDialog> {
                   ),
                   error: (_, _) => message(
                     'Could not load folders.',
-                    onRetry: () => ref.invalidate(moveTargetFoldersProvider),
+                    onRetry: () => ref.invalidate(
+                      moveTargetFoldersProvider(_parentId),
+                    ),
                   ),
                   data: (all) {
-                    // The folder the file is already in is not a choice.
-                    final choices = [
-                      for (final f in all)
-                        if (f.id != widget.file.folderId) f,
-                    ];
-                    if (choices.isEmpty) {
-                      return message('No other folders yet. Create one first.');
+                    final isNested = _breadcrumb.isNotEmpty;
+                    if (all.isEmpty) {
+                      return message(
+                        isNested
+                            ? 'No subfolders here. Go back and pick '
+                                  '${_breadcrumb.last.name} itself, or another '
+                                  'folder.'
+                            : 'No other folders yet. Create one first.',
+                      );
                     }
                     return RadioGroup<String>(
                       groupValue: _selected?.id,
                       onChanged: (id) {
                         if (isMoving) return;
                         setState(() {
-                          _selected = choices.firstWhere((f) => f.id == id);
+                          _selected = all.firstWhere((f) => f.id == id);
                           _error = null;
                         });
                       },
                       child: ListView(
                         shrinkWrap: true,
                         children: [
-                          for (final folder in choices)
-                            RadioListTile<String>(
-                              value: folder.id,
-                              dense: true,
-                              contentPadding: EdgeInsets.zero,
-                              activeColor: colors.primary,
-                              secondary: Icon(
-                                Icons.folder,
-                                color: colors.primary,
-                              ),
-                              title: Text(
-                                folder.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: context.textTheme.bodyMedium?.copyWith(
-                                  fontSize: 14,
-                                  color: colors.textPrimary,
+                          for (final folder in all)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: RadioListTile<String>(
+                                    value: folder.id,
+                                    dense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
+                                    activeColor: colors.primary,
+                                    // The folder the file is already in is
+                                    // not a choice, but its children still
+                                    // are, so it stays openable.
+                                    enabled:
+                                        folder.id != widget.file.folderId,
+                                    secondary: Icon(
+                                      Icons.folder,
+                                      color: colors.primary,
+                                    ),
+                                    title: Text(
+                                      folder.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: context.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontSize: 14,
+                                            color: colors.textPrimary,
+                                          ),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                IconButton(
+                                  icon: const Icon(Icons.chevron_right),
+                                  color: colors.textHint,
+                                  tooltip: 'Open ${folder.name}',
+                                  onPressed: isMoving
+                                      ? null
+                                      : () => _drillIn(folder),
+                                ),
+                              ],
                             ),
                         ],
                       ),

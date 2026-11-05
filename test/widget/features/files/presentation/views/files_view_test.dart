@@ -74,6 +74,9 @@ class _FakeFilesRepository implements FilesRepository {
   final moves = <(String, String)>[];
   Result<void> moveResult = const Success(null);
 
+  /// Folders under a parent id, for the move dialog's drill-down.
+  final Map<String, List<FileFolder>> folderChildren = {};
+
   @override
   Future<Result<void>> moveFile(String fileId, String folderId) async {
     moves.add((fileId, folderId));
@@ -231,7 +234,9 @@ class _FakeFilesRepository implements FilesRepository {
     if (failFolders) {
       return const Failure(ApiFailure(message: 'offline'));
     }
-    if (parentId != null) return const Success(FoldersPage(folders: []));
+    if (parentId != null) {
+      return Success(FoldersPage(folders: folderChildren[parentId] ?? const []));
+    }
     return Success(
       FoldersPage(
         folders: [
@@ -791,7 +796,9 @@ void main() {
     );
   });
 
-  testWidgets('the folder a file is in is not offered', (tester) async {
+  testWidgets('the folder a file is in cannot be chosen as destination', (
+    tester,
+  ) async {
     final repository = _FakeFilesRepository();
     await _pump(tester, repository);
 
@@ -803,10 +810,45 @@ void main() {
     await tester.tap(find.text('Move'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('No other folders yet. Create one first.'),
-      findsOneWidget,
+    // docs is still shown (its children may be move targets) but cannot be
+    // selected, so the Move button stays disabled.
+    final docsRow = find.descendant(
+      of: find.byType(MoveFileDialog),
+      matching: find.text('docs'),
     );
+    expect(docsRow, findsOneWidget);
+    await tester.tap(docsRow);
+    await tester.pump();
+    expect(tester.widget<FilledButton>(moveButton()).onPressed, isNull);
+    expect(repository.moves, isEmpty);
+  });
+
+  testWidgets('a subfolder can be chosen after opening its parent', (
+    tester,
+  ) async {
+    final repository = _FakeFilesRepository()
+      ..folderChildren['docs'] = [const FileFolder(id: 'logos', name: 'Logos')];
+    await _pump(tester, repository);
+    await openFilesTab(tester);
+
+    await chooseInMenu(tester, 'Move');
+    expect(find.text('Move logo.png'), findsOneWidget);
+    expect(find.text('Logos'), findsNothing);
+
+    await tester.tap(find.byTooltip('Open docs'));
+    await tester.pumpAndSettle();
+    expect(find.text('Inside docs'), findsOneWidget);
+    expect(find.text('Logos'), findsOneWidget);
+
+    await tester.tap(find.text('Logos'));
+    await tester.pump();
+    await tester.tap(moveButton());
+    await tester.pumpAndSettle();
+
+    expect(repository.moves, [('f-1', 'logos')]);
+    expect(find.text('Move logo.png'), findsNothing);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
   });
 
   testWidgets('deleted files cannot be moved', (tester) async {
