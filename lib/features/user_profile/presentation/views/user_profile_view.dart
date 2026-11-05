@@ -127,7 +127,11 @@ class _ProfileContent extends StatelessWidget {
               onRemove: notifier.removeMember,
             ),
             UserProfileSection.rolesAndPermissions =>
-              RolesAndPermissionsSection(roles: state.rolesAndPermissions),
+              RolesAndPermissionsSection(
+                roles: state.rolesAndPermissions,
+                onLoadPermissions: notifier.loadSystemPermissions,
+                onCreateRole: notifier.createRole,
+              ),
             UserProfileSection.billing => BillingSection(
               billing: state.billing ?? BillingInfo.empty(),
               onInvite: notifier.inviteMember,

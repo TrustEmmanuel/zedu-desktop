@@ -39,6 +39,13 @@ abstract interface class UserProfileRemoteDataSource {
   Future<TeamMemberModel> updateMember(TeamMember member);
   Future<void> removeMember(String memberId);
   Future<List<RolePermissionModel>> getRolesAndPermissions();
+  Future<List<SystemPermissionModel>> getSystemPermissions();
+  Future<RolePermissionModel> createRole({
+    required String orgId,
+    required String name,
+    required String description,
+    required Map<String, bool> permissions,
+  });
   Future<BillingInfoModel> getBillingInfo();
 }
 
@@ -543,6 +550,86 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   }
 
   @override
+  Future<List<SystemPermissionModel>> getSystemPermissions() async {
+    if (_config.usesMockData) {
+      return _systemPermissions.map(SystemPermissionModel.fromJson).toList();
+    }
+    final response = await _apiBaseService.get<Map<String, dynamic>>(
+      path: '/permissions',
+    );
+    final data = response.data['data'] as List<dynamic>;
+    return data
+        .cast<Map<String, dynamic>>()
+        .map(SystemPermissionModel.fromJson)
+        .toList();
+  }
+
+  @override
+  Future<RolePermissionModel> createRole({
+    required String orgId,
+    required String name,
+    required String description,
+    required Map<String, bool> permissions,
+  }) async {
+    final enabled = [
+      for (final entry in permissions.entries)
+        if (entry.value) entry.key,
+    ];
+    if (_config.usesMockData) {
+      return RolePermissionModel(
+        role: name,
+        description: description,
+        permissions: enabled,
+      );
+    }
+    final response = await _apiBaseService.post<Map<String, dynamic>>(
+      path: orgId.isEmpty
+          ? '/profile/organization/roles'
+          : '/organisations/$orgId/roles',
+      data: {
+        'name': name,
+        'description': description,
+        'permission_list': {
+          for (final entry in permissions.entries)
+            if (entry.value) entry.key: true,
+        },
+      },
+    );
+    final data = response.data['data'];
+    if (data is Map<String, dynamic>) {
+      return _roleFromCreateJson(data);
+    }
+    return RolePermissionModel(
+      role: name,
+      description: description,
+      permissions: enabled,
+    );
+  }
+
+  /// The created role as returned by `POST /organisations/{orgId}/roles`,
+  /// whose `permissions` is an object with a `permission_list` map rather
+  /// than the plain string list the roles list endpoint returns.
+  static RolePermissionModel _roleFromCreateJson(Map<String, dynamic> json) {
+    final permissions = <String>[];
+    final permissionsJson = json['permissions'];
+    if (permissionsJson is Map<String, dynamic>) {
+      final list = permissionsJson['permission_list'];
+      if (list is Map<String, dynamic>) {
+        list.forEach((key, value) {
+          if (value == true) permissions.add(key);
+        });
+      }
+    } else if (permissionsJson is List<dynamic>) {
+      permissions.addAll(permissionsJson.cast<String>());
+    }
+    return RolePermissionModel(
+      role: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      permissions: permissions,
+    );
+  }
+
+  @override
   Future<BillingInfoModel> getBillingInfo() async {
     if (_config.usesMockData) {
       return BillingInfoModel.fromJson(_billing);
@@ -638,6 +725,159 @@ const _members = [
     'date_joined': 'May 7, 2026',
     'status': 'active',
     'name': 'Charlie - Product Lead',
+  },
+];
+
+const _systemPermissions = [
+  {
+    'key': 'can_manage_channels',
+    'name': 'Manage Channels',
+    'category': 'channels',
+    'description': 'Full management over channels',
+  },
+  {
+    'key': 'can_view_channels',
+    'name': 'View Channels',
+    'category': 'channels',
+    'description': 'View organisation channels',
+  },
+  {
+    'key': 'can_create_channels',
+    'name': 'Create Channels',
+    'category': 'channels',
+    'description': 'Create new channels',
+  },
+  {
+    'key': 'can_archive_channels',
+    'name': 'Archive Channels',
+    'category': 'channels',
+    'description': 'Archive channels',
+  },
+  {
+    'key': 'can_manage_members',
+    'name': 'Manage Members',
+    'category': 'members',
+    'description': 'Manage organisation members',
+  },
+  {
+    'key': 'can_invite_members',
+    'name': 'Invite Members',
+    'category': 'members',
+    'description': 'Invite new members',
+  },
+  {
+    'key': 'can_remove_people',
+    'name': 'Remove People',
+    'category': 'members',
+    'description': 'Remove people from the organisation',
+  },
+  {
+    'key': 'can_change_user_org_role',
+    'name': 'Change User Org Role',
+    'category': 'members',
+    'description': 'Change user organisation roles',
+  },
+  {
+    'key': 'can_manage_organization',
+    'name': 'Manage Organisation',
+    'category': 'organization',
+    'description': 'Manage organisation settings & profile',
+  },
+  {
+    'key': 'can_manage_settings',
+    'name': 'Manage Settings',
+    'category': 'settings',
+    'description': 'Manage workspace settings',
+  },
+  {
+    'key': 'can_manage_billing',
+    'name': 'Manage Billing',
+    'category': 'billing',
+    'description': 'Manage subscription & billing',
+  },
+  {
+    'key': 'can_view_billing',
+    'name': 'View Billing',
+    'category': 'billing',
+    'description': 'View billing details',
+  },
+  {
+    'key': 'can_manage_agents',
+    'name': 'Manage Agents',
+    'category': 'agents',
+    'description': 'Manage AI agents and bots',
+  },
+  {
+    'key': 'can_create_agents',
+    'name': 'Create Agents',
+    'category': 'agents',
+    'description': 'Create new AI agents',
+  },
+  {
+    'key': 'can_manage_workflows',
+    'name': 'Manage Workflows',
+    'category': 'workflows',
+    'description': 'Manage automated workflows',
+  },
+  {
+    'key': 'can_manage_integrations',
+    'name': 'Manage Integrations',
+    'category': 'integrations',
+    'description': 'Manage external integrations',
+  },
+  {
+    'key': 'can_create_webhooks',
+    'name': 'Create Webhooks',
+    'category': 'integrations',
+    'description': 'Create new webhooks',
+  },
+  {
+    'key': 'can_manage_security',
+    'name': 'Manage Security',
+    'category': 'security',
+    'description': 'Manage security policies & audit logs',
+  },
+  {
+    'key': 'can_manage_roles',
+    'name': 'Manage Roles',
+    'category': 'roles',
+    'description': 'Manage custom roles & permissions',
+  },
+  {
+    'key': 'can_create_role',
+    'name': 'Create Role',
+    'category': 'roles',
+    'description': 'Create custom roles',
+  },
+  {
+    'key': 'can_view_analytics',
+    'name': 'View Analytics',
+    'category': 'analytics',
+    'description': 'View workspace analytics & metrics',
+  },
+  {
+    'key': 'can_edit_messages',
+    'name': 'Edit Messages',
+    'category': 'messages',
+    'description': 'Edit posted messages',
+  },
+  {
+    'key': 'can_delete_messages',
+    'name': 'Delete Messages',
+    'category': 'messages',
+    'description': 'Delete messages',
+  },
+  {
+    'key': 'can_comment_threads',
+    'name': 'Comment on Threads',
+    'category': 'messages',
+    'description': 'Comment on threads',
+  },
+  {
+    'key': 'can_delete_files',
+    'name': 'Delete Files',
+    'category': 'files',
+    'description': 'Delete uploaded files',
   },
 ];
 

@@ -2,13 +2,28 @@ import 'package:zedu/features/features.dart';
 
 import '../../../../../../helpers/helpers.dart';
 
+const _noOpPermissions = <SystemPermission>[];
+Future<bool> _noOpCreate({
+  required String name,
+  required String description,
+  required Map<String, bool> permissions,
+}) async {
+  return true;
+}
+
 void main() {
   testWidgets('the page title matches the "Roles & permissions" menu item', (
     tester,
   ) async {
     await tester.pumpWidget(
       buildTestMaterialApp(
-        const Scaffold(body: RolesAndPermissionsSection(roles: [])),
+        Scaffold(
+          body: RolesAndPermissionsSection(
+            roles: const [],
+            onLoadPermissions: () async => _noOpPermissions,
+            onCreateRole: _noOpCreate,
+          ),
+        ),
       ),
     );
 
@@ -21,9 +36,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       buildTestMaterialApp(
-        const Scaffold(
+        Scaffold(
           body: RolesAndPermissionsSection(
-            roles: [
+            roles: const [
               RolePermission(
                 role: 'Admin',
                 description: 'Manages the workspace.',
@@ -35,6 +50,8 @@ void main() {
                 permissions: [],
               ),
             ],
+            onLoadPermissions: () async => _noOpPermissions,
+            onCreateRole: _noOpCreate,
           ),
         ),
       ),

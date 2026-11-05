@@ -594,6 +594,55 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     return loadId != _loadCounter || currentOrgId != orgId;
   }
 
+  /// The toggleable permission catalog for the Create Role dialog. Thrown
+  /// errors surface in the dialog, which shows its own retry UI.
+  Future<List<SystemPermission>> loadSystemPermissions() async {
+    final result = await _repository.getSystemPermissions();
+    switch (result) {
+      case Success<List<SystemPermission>>():
+        return result.value;
+      case Failure<List<SystemPermission>>():
+        throw StateError(result.error.friendlyMessage);
+    }
+  }
+
+  /// Creates a custom organisation role and appends it to the role list.
+  /// Returns true when the role was created, false when the request failed
+  /// (the failure is reported through [UserProfileState.error]).
+  Future<bool> createRole({
+    required String name,
+    required String description,
+    required Map<String, bool> permissions,
+  }) async {
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
+    final orgId = ref.read(workspaceProvider).selectedWorkspace?.id ?? '';
+    final result = await _repository.createRole(
+      orgId: orgId,
+      name: name,
+      description: description,
+      permissions: permissions,
+    );
+    switch (result) {
+      case Success<RolePermission>():
+        state = state.copyWith(
+          rolesAndPermissions: [...state.rolesAndPermissions, result.value],
+          isSaving: false,
+          successMessage: 'Role created successfully.',
+        );
+        return true;
+      case Failure<RolePermission>():
+        state = state.copyWith(
+          isSaving: false,
+          error: result.error.friendlyMessage,
+        );
+        return false;
+    }
+  }
+
   Future<void> load() async {
     final loadId = ++_loadCounter;
     state = state.copyWith(isLoading: true, clearError: true);

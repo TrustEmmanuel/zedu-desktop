@@ -226,4 +226,121 @@ void main() {
       );
     });
   });
+
+  group('UserProfileRemoteDataSourceImpl roles and permissions', () {
+    late MockApiBaseService mockApi;
+    late UserProfileRemoteDataSourceImpl datasource;
+
+    setUp(() {
+      mockApi = MockApiBaseService();
+      datasource = UserProfileRemoteDataSourceImpl(
+        config: const AppConfig(apiBaseUrl: '', usesMockData: false),
+        apiBaseService: mockApi,
+      );
+    });
+
+    test('parses the system permission catalog', () async {
+      when(
+        () => mockApi.get<Map<String, dynamic>>(path: any(named: 'path')),
+      ).thenAnswer(
+        (_) async => const ApiResponseModel<Map<String, dynamic>>(
+          statusCode: 200,
+          data: {
+            'data': [
+              {
+                'key': 'can_view_channels',
+                'name': 'View Channels',
+                'category': 'channels',
+                'description': 'View organisation channels',
+              },
+            ],
+          },
+        ),
+      );
+
+      final catalog = await datasource.getSystemPermissions();
+
+      verify(
+        () => mockApi.get<Map<String, dynamic>>(path: '/permissions'),
+      ).called(1);
+      expect(catalog.single.key, 'can_view_channels');
+      expect(catalog.single.name, 'View Channels');
+      expect(catalog.single.category, 'channels');
+    });
+
+    test('posts name, description and only enabled permissions', () async {
+      when(
+        () => mockApi.post<Map<String, dynamic>>(
+          path: any(named: 'path'),
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => const ApiResponseModel<Map<String, dynamic>>(
+          statusCode: 201,
+          data: {
+            'data': {
+              'id': 'role-9',
+              'name': 'Moderator',
+              'description': 'Keeps channels tidy',
+              'permissions': {
+                'permission_list': {'can_view_channels': true},
+              },
+            },
+          },
+        ),
+      );
+
+      final created = await datasource.createRole(
+        orgId: 'org-1',
+        name: 'Moderator',
+        description: 'Keeps channels tidy',
+        permissions: {'can_view_channels': true, 'can_create_channels': false},
+      );
+
+      final data =
+          verify(
+                () => mockApi.post<Map<String, dynamic>>(
+                  path: '/organisations/org-1/roles',
+                  data: captureAny(named: 'data'),
+                ),
+              ).captured.single
+              as Map<String, dynamic>;
+      expect(data, {
+        'name': 'Moderator',
+        'description': 'Keeps channels tidy',
+        'permission_list': {'can_view_channels': true},
+      });
+      expect(created.role, 'Moderator');
+      expect(created.description, 'Keeps channels tidy');
+      expect(created.permissions, ['can_view_channels']);
+    });
+
+    test('falls back to the profile path without a workspace id', () async {
+      when(
+        () => mockApi.post<Map<String, dynamic>>(
+          path: any(named: 'path'),
+          data: any(named: 'data'),
+        ),
+      ).thenAnswer(
+        (_) async => const ApiResponseModel<Map<String, dynamic>>(
+          statusCode: 201,
+          data: {'data': null},
+        ),
+      );
+
+      await datasource.createRole(
+        orgId: '',
+        name: 'Moderator',
+        description: '',
+        permissions: const {'can_view_channels': true},
+      );
+
+      verify(
+        () => mockApi.post<Map<String, dynamic>>(
+          path: '/profile/organization/roles',
+          data: any(named: 'data'),
+        ),
+      ).called(1);
+    });
+  });
 }

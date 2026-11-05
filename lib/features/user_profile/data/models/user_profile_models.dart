@@ -287,6 +287,24 @@ class RolePermissionModel extends RolePermission {
   }
 }
 
+class SystemPermissionModel extends SystemPermission {
+  const SystemPermissionModel({
+    required super.key,
+    required super.name,
+    required super.category,
+    required super.description,
+  });
+
+  factory SystemPermissionModel.fromJson(Map<String, dynamic> json) {
+    return SystemPermissionModel(
+      key: (json['key'] as String?) ?? (json['id'] as String?) ?? '',
+      name: json['name'] as String? ?? '',
+      category: json['category'] as String? ?? 'general',
+      description: json['description'] as String? ?? '',
+    );
+  }
+}
+
 class BillingInfoModel extends BillingInfo {
   const BillingInfoModel({
     required super.plan,

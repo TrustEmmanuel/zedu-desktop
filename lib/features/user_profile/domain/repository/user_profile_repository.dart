@@ -41,5 +41,12 @@ abstract interface class UserProfileRepository {
   Future<Result<TeamMember>> updateMember(TeamMember member);
   Future<Result<void>> removeMember(String memberId);
   Future<Result<List<RolePermission>>> getRolesAndPermissions();
+  Future<Result<List<SystemPermission>>> getSystemPermissions();
+  Future<Result<RolePermission>> createRole({
+    required String orgId,
+    required String name,
+    required String description,
+    required Map<String, bool> permissions,
+  });
   Future<Result<BillingInfo>> getBillingInfo();
 }

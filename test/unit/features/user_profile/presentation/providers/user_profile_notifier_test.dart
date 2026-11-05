@@ -638,4 +638,178 @@ void main() {
       expect(state.error, isNotNull);
     });
   });
+
+  group('UserProfileNotifier.createRole', () {
+    late MockUserProfileRepository repository;
+
+    setUp(() {
+      registerFallbackValue('');
+      registerFallbackValue(<String, bool>{});
+      repository = MockUserProfileRepository();
+
+      locator.registerSingleton<AppConfig>(
+        AppConfig(apiBaseUrl: 'https://api.example.com', usesMockData: false),
+      );
+      final mockStorage = MockSecureStorageService();
+      when(() => mockStorage.readData(any())).thenAnswer((_) async => null);
+      locator.registerSingleton<SecureStorageService>(mockStorage);
+
+      // Stub every repository call made by the background load() microtask
+      // scheduled in build() so it completes without errors.
+      when(
+        () => repository.getAccount(),
+      ).thenAnswer((_) async => Success(ProfileAccount.empty()));
+      when(
+        () => repository.getNotificationPreferences(orgId: any(named: 'orgId')),
+      ).thenAnswer((_) async => Success(NotificationPreferences.empty()));
+      when(
+        () => repository.getSecuritySessions(),
+      ).thenAnswer((_) async => Success(<SecuritySession>[]));
+      when(
+        () => repository.getOrganization(orgId: any(named: 'orgId')),
+      ).thenAnswer(
+        (_) async => const Success(
+          OrganizationProfile(
+            id: '',
+            name: '',
+            natureOfBusiness: '',
+            country: '',
+          ),
+        ),
+      );
+      when(
+        () => repository.getTeamMembers(orgId: any(named: 'orgId')),
+      ).thenAnswer((_) async => Success(<TeamMember>[]));
+      when(
+        () => repository.getRolesAndPermissions(),
+      ).thenAnswer((_) async => Success(<RolePermission>[]));
+      when(
+        () => repository.getBillingInfo(),
+      ).thenAnswer((_) async => Success(BillingInfo.empty()));
+    });
+
+    tearDown(() async {
+      await locator.reset();
+    });
+
+    ProviderContainer makeContainer() {
+      final container = ProviderContainer(
+        overrides: [
+          userProfileRepositoryProvider.overrideWithValue(repository),
+          workspaceProvider.overrideWith(_FakeWorkspaceNotifier.new),
+        ],
+      );
+      addTearDown(container.dispose);
+      return container;
+    }
+
+    Future<void> waitForLoad(ProviderContainer container) async {
+      while (container.read(userProfileNotifierProvider).isLoading) {
+        await Future<void>.delayed(Duration.zero);
+      }
+    }
+
+    test('appends the created role and reports success', () async {
+      final captured = <String, Object?>{};
+      when(
+        () => repository.createRole(
+          orgId: any(named: 'orgId'),
+          name: any(named: 'name'),
+          description: any(named: 'description'),
+          permissions: any(named: 'permissions'),
+        ),
+      ).thenAnswer((invocation) async {
+        captured['orgId'] = invocation.namedArguments[#orgId];
+        captured['name'] = invocation.namedArguments[#name];
+        captured['description'] = invocation.namedArguments[#description];
+        captured['permissions'] = invocation.namedArguments[#permissions];
+        return Success(
+          RolePermission(
+            role: 'Moderator',
+            description: 'Keeps channels tidy',
+            permissions: const ['View channels'],
+          ),
+        );
+      });
+
+      final container = makeContainer();
+      await waitForLoad(container);
+
+      final created = await container
+          .read(userProfileNotifierProvider.notifier)
+          .createRole(
+            name: 'Moderator',
+            description: 'Keeps channels tidy',
+            permissions: const {'can_view_channels': true},
+          );
+
+      expect(created, isTrue);
+      expect(captured['orgId'], 'org-1');
+      expect(captured['name'], 'Moderator');
+      expect(captured['description'], 'Keeps channels tidy');
+      expect(captured['permissions'], {'can_view_channels': true});
+
+      final state = container.read(userProfileNotifierProvider);
+      expect(state.rolesAndPermissions.single.role, 'Moderator');
+      expect(state.isSaving, isFalse);
+      expect(state.successMessage, 'Role created successfully.');
+      expect(state.error, isNull);
+    });
+
+    test('keeps the role list and reports a failed create', () async {
+      when(
+        () => repository.createRole(
+          orgId: any(named: 'orgId'),
+          name: any(named: 'name'),
+          description: any(named: 'description'),
+          permissions: any(named: 'permissions'),
+        ),
+      ).thenAnswer(
+        (_) async => const Failure<RolePermission>(
+          ApiFailure(message: 'Role name taken', kind: ApiFailureKind.client),
+        ),
+      );
+
+      final container = makeContainer();
+      await waitForLoad(container);
+
+      final created = await container
+          .read(userProfileNotifierProvider.notifier)
+          .createRole(
+            name: 'Moderator',
+            description: '',
+            permissions: const {},
+          );
+
+      expect(created, isFalse);
+      final state = container.read(userProfileNotifierProvider);
+      expect(state.rolesAndPermissions, isEmpty);
+      expect(state.isSaving, isFalse);
+      expect(state.error, 'Role name taken');
+    });
+
+    test('exposes the permission catalog through loadSystemPermissions', () async {
+      when(
+        () => repository.getSystemPermissions(),
+      ).thenAnswer(
+        (_) async => const Success([
+          SystemPermission(
+            key: 'can_view_channels',
+            name: 'View Channels',
+            category: 'channels',
+            description: 'View organisation channels',
+          ),
+        ]),
+      );
+
+      final container = makeContainer();
+      await waitForLoad(container);
+
+      final catalog = await container
+          .read(userProfileNotifierProvider.notifier)
+          .loadSystemPermissions();
+
+      expect(catalog.single.key, 'can_view_channels');
+    });
+  });
 }
