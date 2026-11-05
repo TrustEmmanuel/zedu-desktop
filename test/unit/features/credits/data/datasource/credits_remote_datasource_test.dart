@@ -86,4 +86,92 @@ void main() {
       verifyNoMoreInteractions(api);
     },
   );
+
+  test(
+    'live getUsage falls back to the usage report when usage returns a list',
+    () async {
+      final live = CreditsRemoteDataSourceImpl(
+        config: const AppConfig(
+          apiBaseUrl: 'https://example.invalid',
+          usesMockData: false,
+        ),
+        apiBaseService: api,
+      );
+      when(
+        () => api.get<Map<String, dynamic>>(path: '/credits/usage/org-1'),
+      ).thenAnswer(
+        (_) async => ApiResponseModel(
+          data: <String, dynamic>{'data': <Map<String, dynamic>>[]},
+          statusCode: 200,
+        ),
+      );
+      when(
+        () => api.get<Map<String, dynamic>>(
+          path: '/credits/usage-report/org-1',
+        ),
+      ).thenAnswer(
+        (_) async => ApiResponseModel(
+          data: <String, dynamic>{
+            'data': <String, dynamic>{
+              'balance': 120,
+              'total_credited': 500,
+              'total_used': 380,
+            },
+          },
+          statusCode: 200,
+        ),
+      );
+
+      final usage = await live.getUsage('org-1');
+
+      expect(usage.balance, 120);
+      expect(usage.totalPurchased, 500);
+      expect(usage.totalConsumed, 380);
+    },
+  );
+
+  test(
+    'live getUsage still reads a map-shaped usage response directly',
+    () async {
+      final live = CreditsRemoteDataSourceImpl(
+        config: const AppConfig(
+          apiBaseUrl: 'https://example.invalid',
+          usesMockData: false,
+        ),
+        apiBaseService: api,
+      );
+      when(
+        () => api.get<Map<String, dynamic>>(path: '/credits/usage/org-1'),
+      ).thenAnswer(
+        (_) async => ApiResponseModel(
+          data: <String, dynamic>{
+            'data': <String, dynamic>{
+              'balance': 30,
+              'total_purchased': 90,
+              'total_consumed': 60,
+            },
+          },
+          statusCode: 200,
+        ),
+      );
+
+      final usage = await live.getUsage('org-1');
+
+      expect(usage.balance, 30);
+      expect(usage.totalPurchased, 90);
+      expect(usage.totalConsumed, 60);
+    },
+  );
+
+  test('CreditUsageModel parses the usage-report JSON shape', () {
+    final model = CreditUsageModel.fromJson({
+      'balance': 75,
+      'total_credited': 200,
+      'total_used': 125,
+    });
+
+    expect(model.balance, 75);
+    expect(model.totalPurchased, 200);
+    expect(model.totalConsumed, 125);
+  });
 }

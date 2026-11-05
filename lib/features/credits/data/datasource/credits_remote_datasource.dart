@@ -52,8 +52,23 @@ class CreditsRemoteDataSourceImpl implements CreditsRemoteDataSource {
     final response = await _api.get<Map<String, dynamic>>(
       path: '/credits/usage/$orgId',
     );
-    return CreditUsageModel.fromJson(
-      response.data['data'] as Map<String, dynamic>,
+    final data = response.data['data'];
+    if (data is Map<String, dynamic>) {
+      return CreditUsageModel.fromJson(data);
+    }
+    // The usage endpoint returns a paginated list of per-agent rows; the
+    // balance itself lives in the usage report.
+    final report = await _api.get<Map<String, dynamic>>(
+      path: '/credits/usage-report/$orgId',
+    );
+    final reportData = report.data['data'];
+    if (reportData is Map<String, dynamic>) {
+      return CreditUsageModel.fromJson(reportData);
+    }
+    return const CreditUsageModel(
+      balance: 0,
+      totalPurchased: 0,
+      totalConsumed: 0,
     );
   }
 
