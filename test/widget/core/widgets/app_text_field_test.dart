@@ -140,4 +140,76 @@ void main() {
       expect(decoration.focusedErrorBorder, isNotNull);
     });
   });
+
+  group('AppTextField obscure sync', () {
+    Widget buildField(TextEditingController controller, bool isPassword) {
+      return buildTestMaterialApp(
+        Scaffold(
+          body: AppTextField(
+            controller: controller,
+            hint: 'Password',
+            isPassword: isPassword,
+          ),
+        ),
+      );
+    }
+
+    testWidgets('switching isPassword on hides the text', (tester) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(buildField(controller, false));
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).obscureText,
+        isFalse,
+      );
+
+      await tester.pumpWidget(buildField(controller, true));
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).obscureText,
+        isTrue,
+      );
+    });
+
+    testWidgets('switching isPassword off shows the text again', (
+      tester,
+    ) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(buildField(controller, true));
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).obscureText,
+        isTrue,
+      );
+
+      await tester.pumpWidget(buildField(controller, false));
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).obscureText,
+        isFalse,
+      );
+    });
+
+    testWidgets('a rebuild with the same isPassword keeps the user toggle', (
+      tester,
+    ) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(buildField(controller, true));
+      await tester.tap(find.byTooltip('Show password'));
+      await tester.pump();
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).obscureText,
+        isFalse,
+      );
+
+      await tester.pumpWidget(buildField(controller, true));
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).obscureText,
+        isFalse,
+        reason: 'a rebuild with unchanged isPassword must not reset the toggle',
+      );
+    });
+  });
 }
