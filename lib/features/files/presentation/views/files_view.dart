@@ -10,6 +10,7 @@ class FilesView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final state = ref.watch(filesProvider);
+    final isShared = state.view == FilesScope.shared;
     final title = state.folderPath.isEmpty
         ? state.view.label
         : state.folderPath.last.name;
@@ -39,7 +40,7 @@ class FilesView extends ConsumerWidget {
                     ),
                   ),
                 ),
-                if (state.view != FilesScope.trash) ...[
+                if (state.view != FilesScope.trash && !isShared) ...[
                   const _UploadButton(),
                   const SizedBox(width: 12),
                   _HeaderButton(
@@ -70,21 +71,27 @@ class FilesView extends ConsumerWidget {
                   _Breadcrumbs(state: state),
                 ],
                 const SizedBox(height: 16),
-                _Tabs(selected: state.tab),
-                const SizedBox(height: 24),
-                Text(
-                  state.tab == FilesTab.folders ? 'Folders' : 'Files',
-                  style: context.textTheme.titleMedium?.copyWith(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textPrimary,
+                // The web's Shared with me page is a files-only list, with no
+                // folder navigation or upload controls.
+                if (isShared)
+                  const _FilesSection()
+                else ...[
+                  _Tabs(selected: state.tab),
+                  const SizedBox(height: 24),
+                  Text(
+                    state.tab == FilesTab.folders ? 'Folders' : 'Files',
+                    style: context.textTheme.titleMedium?.copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                if (state.tab == FilesTab.folders)
-                  const _FoldersSection()
-                else
-                  const _FilesSection(),
+                  const SizedBox(height: 16),
+                  if (state.tab == FilesTab.folders)
+                    const _FoldersSection()
+                  else
+                    const _FilesSection(),
+                ],
               ],
             ),
           ),

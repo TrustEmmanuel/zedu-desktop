@@ -353,6 +353,24 @@ void main() {
     expect(find.text('Deleted files'), findsNWidgets(2));
   });
 
+  testWidgets('Shared with me is a files-only list without folder controls', (
+    tester,
+  ) async {
+    final repository = _FakeFilesRepository();
+    await _pump(tester, repository);
+
+    await tester.tap(find.text('Shared with me'));
+    await tester.pumpAndSettle();
+
+    expect(repository.queries.last.view, FilesScope.shared);
+    // The web's shared page has no upload, no new folder, and no folder tab.
+    expect(find.text('Upload File'), findsNothing);
+    expect(find.text('New Folder'), findsNothing);
+    expect(find.text('Folders'), findsNothing);
+    expect(find.text('Files'), findsNothing);
+    expect(find.text('logo.png'), findsOneWidget);
+  });
+
   testWidgets('opening a folder shows its files and a way back', (
     tester,
   ) async {
