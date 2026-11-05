@@ -1,3 +1,5 @@
+import 'dart:io' show Directory;
+
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/dms/presentation/components/composer/attachment_preview_bar.dart';
 import 'package:zedu/features/features.dart';
@@ -227,6 +229,55 @@ void main() {
 
         expect(find.byType(Chip), findsOneWidget);
         expect(find.textContaining('pasted_image_'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'MessageComposer sends the pasted image path, not just its name',
+      (tester) async {
+        String? sent;
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              userProfileNotifierProvider.overrideWith(
+                _FakeUserProfileNotifier.new,
+              ),
+            ],
+            child: buildTestMaterialApp(
+              Scaffold(
+                body: MessageComposer(
+                  activeChat: const ActiveChatState(
+                    id: 'general',
+                    type: ActiveChatType.channel,
+                  ),
+                  onSend: (message) => sent = message,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(TextField), 'photo');
+        await tester.pumpAndSettle();
+
+        final dummyPng = Uint8List.fromList([0x89, 0x50, 0x4E, 0x47]);
+        final reader = FakeDataReader(formats: {Formats.png: dummyPng});
+
+        final dynamic state = tester.state(find.byType(MessageComposer));
+        final handled = await tester.runAsync(
+          () => state.handlePaste(reader: reader) as Future<bool>,
+        );
+        expect(handled, isTrue);
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.send));
+        await tester.pumpAndSettle();
+
+        expect(sent, isNotNull);
+        expect(sent, contains('photo'));
+        expect(sent, contains('[Attachment: pasted_image_'));
+        expect(sent, contains(Directory.systemTemp.path));
       },
     );
   });

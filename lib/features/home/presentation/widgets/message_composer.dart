@@ -23,7 +23,7 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
   bool _isFocused = false;
   bool _isRecording = false;
   bool _showMentions = false;
-  final List<String> _attachedFiles = [];
+  final List<XFile> _attachedFiles = [];
   final AudioRecorder _audioRecorder = AudioRecorder();
 
   @override
@@ -68,19 +68,24 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
 
     SimpleFileFormat? matchedFormat;
     String ext = 'png';
+    String mime = 'image/png';
 
     if (clipReader.canProvide(Formats.png)) {
       matchedFormat = Formats.png;
       ext = 'png';
+      mime = 'image/png';
     } else if (clipReader.canProvide(Formats.jpeg)) {
       matchedFormat = Formats.jpeg;
       ext = 'jpg';
+      mime = 'image/jpeg';
     } else if (clipReader.canProvide(Formats.webp)) {
       matchedFormat = Formats.webp;
       ext = 'webp';
+      mime = 'image/webp';
     } else if (clipReader.canProvide(Formats.gif)) {
       matchedFormat = Formats.gif;
       ext = 'gif';
+      mime = 'image/gif';
     }
 
     if (matchedFormat != null) {
@@ -93,16 +98,26 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
             if (bytes.isNotEmpty) {
               final fileName =
                   'pasted_image_${DateTime.now().millisecondsSinceEpoch}.$ext';
+              final tempPath =
+                  '${Directory.systemTemp.path}${Platform.pathSeparator}$fileName';
               try {
-                final tempPath =
-                    '${Directory.systemTemp.path}${Platform.pathSeparator}$fileName';
                 final tempFile = File(tempPath);
                 await tempFile.writeAsBytes(bytes);
-              } catch (_) {}
-              if (mounted) {
-                setState(() {
-                  _attachedFiles.add(fileName);
-                });
+                if (mounted) {
+                  setState(() {
+                    _attachedFiles.add(
+                      XFile(tempPath, name: fileName, mimeType: mime),
+                    );
+                  });
+                }
+              } catch (_) {
+                if (mounted) {
+                  setState(() {
+                    _attachedFiles.add(
+                      XFile.fromData(bytes, name: fileName, mimeType: mime),
+                    );
+                  });
+                }
               }
             }
             if (!completer.isCompleted) completer.complete(true);
@@ -133,7 +148,7 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
             final fileName = filePath.split(Platform.pathSeparator).last;
             if (mounted) {
               setState(() {
-                _attachedFiles.add(fileName);
+                _attachedFiles.add(XFile(filePath, name: fileName));
               });
             }
           }
@@ -152,7 +167,7 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
     String finalMessage = text;
     if (_attachedFiles.isNotEmpty) {
       final attachmentsStr = _attachedFiles
-          .map((f) => '[Attachment: $f]')
+          .map((f) => '[Attachment: ${f.name} (${f.path})]')
           .join(' ');
       finalMessage = text.isEmpty ? attachmentsStr : '$text\n$attachmentsStr';
     }
@@ -368,7 +383,11 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
                     );
                     if (result != null) {
                       setState(() {
-                        _attachedFiles.addAll(result.names.whereType<String>());
+                        _attachedFiles.addAll(
+                          result.files
+                              .where((f) => f.path != null)
+                              .map((f) => XFile(f.path!, name: f.name)),
+                        );
                       });
                     }
                   },
@@ -458,26 +477,30 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: _attachedFiles.map((fileName) {
-                  return Chip(
-                    label: Text(
-                      fileName,
-                      style: TextStyle(fontSize: 12, color: colors.textPrimary),
+                children: [
+                  for (var i = 0; i < _attachedFiles.length; i++)
+                    Chip(
+                      label: Text(
+                        _attachedFiles[i].name,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      deleteIcon: Icon(
+                        Icons.close,
+                        size: 16,
+                        color: colors.textHint,
+                      ),
+                      onDeleted: () {
+                        setState(() {
+                          _attachedFiles.removeAt(i);
+                        });
+                      },
+                      backgroundColor: colors.background,
+                      side: BorderSide(color: colors.divider),
                     ),
-                    deleteIcon: Icon(
-                      Icons.close,
-                      size: 16,
-                      color: colors.textHint,
-                    ),
-                    onDeleted: () {
-                      setState(() {
-                        _attachedFiles.remove(fileName);
-                      });
-                    },
-                    backgroundColor: colors.background,
-                    side: BorderSide(color: colors.divider),
-                  );
-                }).toList(),
+                ],
               ),
             ),
         ],
