@@ -56,14 +56,30 @@ void main() {
       );
     });
 
-    test('handles whitespace padding cleanly', () {
-      expect(
+    test('handles whitespace padding cleanly', () {      expect(
         formatDesktopWindowTitle(
           contextName: '   Dev Channel   ',
           workspaceName: 'Acme',
         ),
         'Dev Channel · Zedu',
       );
+    });
+  });
+
+  group('formatChannelTitle', () {
+    test('uppercases the first character of a plain name', () {
+      expect(formatChannelTitle('general'), 'General');
+      expect(formatChannelTitle('# launches'), 'Launches');
+    });
+
+    test('keeps emoji-prefixed names intact', () {
+      expect(formatChannelTitle('🚀 launches'), '🚀 launches');
+      expect(formatChannelTitle('# 🚀 launches'), '🚀 launches');
+    });
+
+    test('falls back to General for empty names', () {
+      expect(formatChannelTitle(''), 'General');
+      expect(formatChannelTitle('#'), 'General');
     });
   });
 

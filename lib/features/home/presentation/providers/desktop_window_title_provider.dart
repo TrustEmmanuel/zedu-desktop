@@ -19,10 +19,13 @@ String formatDesktopWindowTitle({
   return appName;
 }
 
-String _formatChannelTitle(String name) {
+/// Formats a channel name for the window title. Indexing with characters
+/// instead of UTF-16 code units keeps emoji-prefixed names intact.
+String formatChannelTitle(String name) {
   final clean = name.startsWith('#') ? name.substring(1).trim() : name.trim();
   if (clean.isEmpty) return 'General';
-  return clean[0].toUpperCase() + clean.substring(1);
+  final first = clean.characters.first;
+  return first.toUpperCase() + clean.substring(first.length);
 }
 
 final desktopWindowTitleProvider = Provider<String>((ref) {
@@ -59,7 +62,7 @@ final desktopWindowTitleProvider = Provider<String>((ref) {
           ownerId: '',
         ),
       );
-      contextName = _formatChannelTitle(ch.name);
+      contextName = formatChannelTitle(ch.name);
       break;
 
     case ActiveChatType.directMessage:
