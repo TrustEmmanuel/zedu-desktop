@@ -88,32 +88,59 @@ class ChannelMessageList extends ConsumerWidget {
   }
 }
 
-class ChannelMessageTile extends StatelessWidget {
+class ChannelMessageTile extends ConsumerWidget {
   const ChannelMessageTile({super.key, required this.message, this.onRetry});
 
   final ChannelMessage message;
   final VoidCallback? onRetry;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final avatarUrl = message.avatarUrl;
     final time = message.createdAt;
     final initial = avatarInitial(message.senderName);
     final status = message.status;
 
+    // The member record for the sender, when the workspace list has one,
+    // gives the profile dialog an email and user id.
+    final members = ref.watch(userProfileNotifierProvider).teamMembers;
+    TeamMember? member;
+    for (final m in members) {
+      if ((m.name ?? '').trim().toLowerCase() ==
+          message.senderName.trim().toLowerCase()) {
+        member = m;
+        break;
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: colors.primary,
-            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-            child: avatarUrl == null
-                ? Text(initial, style: TextStyle(color: colors.onPrimary))
-                : null,
+          Tooltip(
+            message: 'View profile',
+            child: InkWell(
+              onTap: () => MemberProfileDialog.show(
+                context,
+                name: message.senderName,
+                avatarUrl: avatarUrl,
+                email: member?.email,
+                userId: member?.id,
+              ),
+              customBorder: const CircleBorder(),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: colors.primary,
+                backgroundImage: avatarUrl != null
+                    ? NetworkImage(avatarUrl)
+                    : null,
+                child: avatarUrl == null
+                    ? Text(initial, style: TextStyle(color: colors.onPrimary))
+                    : null,
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

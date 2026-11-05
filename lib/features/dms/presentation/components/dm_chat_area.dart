@@ -1113,23 +1113,36 @@ class _MessageBubble extends ConsumerWidget {
             : MainAxisAlignment.start,
         children: [
           if (!isMe) ...[
-            CircleAvatar(
-              radius: 15,
-              backgroundColor: colors.primary,
-              backgroundImage:
-                  senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
-                  ? NetworkImage(senderAvatarUrl)
-                  : null,
-              child: senderAvatarUrl == null || senderAvatarUrl.isEmpty
-                  ? Text(
-                      senderInitial,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    )
-                  : null,
+            Tooltip(
+              message: 'View profile',
+              child: InkWell(
+                onTap: () => MemberProfileDialog.show(
+                  context,
+                  name: conversation.displayName,
+                  avatarUrl: conversation.effectiveAvatarUrl,
+                  email: conversation.participantEmail,
+                  userId: conversation.participantId,
+                ),
+                customBorder: const CircleBorder(),
+                child: CircleAvatar(
+                  radius: 15,
+                  backgroundColor: colors.primary,
+                  backgroundImage:
+                      senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
+                      ? NetworkImage(senderAvatarUrl)
+                      : null,
+                  child: senderAvatarUrl == null || senderAvatarUrl.isEmpty
+                      ? Text(
+                          senderInitial,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        )
+                      : null,
+                ),
+              ),
             ),
             const SizedBox(width: 12),
           ],
