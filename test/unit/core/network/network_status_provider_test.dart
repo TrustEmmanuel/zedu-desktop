@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zedu/core/core.dart';
 
@@ -98,5 +100,59 @@ void main() {
       container.read(networkStatusProvider);
       expect(() => container.dispose(), returnsNormally);
     });
+
+    test(
+      'a stale check finishing last does not overwrite the newer result',
+      () async {
+        final olderCheck = Completer<bool>();
+        final newerCheck = Completer<bool>();
+        var calls = 0;
+        final container = ProviderContainer(
+          overrides: [
+            reachabilityCheckerProvider.overrideWithValue(() {
+              calls++;
+              return calls == 1 ? olderCheck.future : newerCheck.future;
+            }),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(networkStatusProvider.notifier);
+
+        // The newer check resolves first and reports offline.
+        final newerResult = notifier.checkReachability();
+        newerCheck.complete(false);
+        await newerResult;
+        expect(container.read(networkStatusProvider), NetworkStatus.offline);
+
+        // The older check (started by build) finishes last and reports
+        // online; its stale result must be ignored.
+        olderCheck.complete(true);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(container.read(networkStatusProvider), NetworkStatus.offline);
+      },
+    );
+
+    test(
+      'a manual override wins over an in-flight check that finishes later',
+      () async {
+        final inFlight = Completer<bool>();
+        final container = ProviderContainer(
+          overrides: [
+            reachabilityCheckerProvider.overrideWithValue(() => inFlight.future),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(networkStatusProvider.notifier);
+
+        notifier.setOffline();
+        inFlight.complete(true);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(container.read(networkStatusProvider), NetworkStatus.offline);
+      },
+    );
   });
 }

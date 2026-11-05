@@ -14,6 +14,7 @@ final reachabilityCheckerProvider = Provider<ReachabilityChecker>((ref) {
 
 class NetworkStatusNotifier extends Notifier<NetworkStatus> {
   Timer? _checkTimer;
+  int _checkGeneration = 0;
 
   static Future<bool> defaultReachabilityChecker() async {
     try {
@@ -52,25 +53,29 @@ class NetworkStatusNotifier extends Notifier<NetworkStatus> {
   }
 
   Future<void> _checkReachability(ReachabilityChecker checker) async {
+    final generation = ++_checkGeneration;
     try {
       final isOnline = await checker();
-      if (!ref.mounted) return;
+      if (!ref.mounted || generation != _checkGeneration) return;
       state = isOnline ? NetworkStatus.online : NetworkStatus.offline;
     } catch (_) {
-      if (!ref.mounted) return;
+      if (!ref.mounted || generation != _checkGeneration) return;
       state = NetworkStatus.offline;
     }
   }
 
   void setOffline() {
+    _checkGeneration++;
     state = NetworkStatus.offline;
   }
 
   void setOnline() {
+    _checkGeneration++;
     state = NetworkStatus.online;
   }
 
   void toggle() {
+    _checkGeneration++;
     state = state == NetworkStatus.online
         ? NetworkStatus.offline
         : NetworkStatus.online;
