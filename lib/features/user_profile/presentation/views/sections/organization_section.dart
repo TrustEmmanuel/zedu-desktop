@@ -84,7 +84,9 @@ class OrganizationSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 48),
-        Row(
+        Wrap(
+          spacing: 16,
+          runSpacing: 12,
           children: [
             AppButton.outlined(
               label: 'Sign out of workspace',
@@ -98,7 +100,6 @@ class OrganizationSection extends StatelessWidget {
               loading: isSaving,
               onPressed: () => _confirmLeave(context, onLeave),
             ),
-            const SizedBox(width: 16),
             AppButton.outlined(
               label: 'Delete organization',
               expand: false,
