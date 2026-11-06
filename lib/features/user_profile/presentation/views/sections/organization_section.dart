@@ -59,7 +59,7 @@ class OrganizationSection extends StatelessWidget {
                     const ProfileFieldLabel('Country'),
                     const SizedBox(height: 4),
                     Text(
-                      organization.country,
+                      countryDisplayName(organization.country),
                       style: context.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),

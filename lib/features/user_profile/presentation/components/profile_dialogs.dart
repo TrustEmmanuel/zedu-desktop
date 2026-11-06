@@ -352,7 +352,9 @@ Future<void> showEditOrganizationDialog(
   final businessCtrl = TextEditingController(
     text: organization.natureOfBusiness,
   );
-  final countryCtrl = TextEditingController(text: organization.country);
+  final countryCtrl = TextEditingController(
+    text: countryDisplayName(organization.country),
+  );
   final formKey = GlobalKey<FormState>();
 
   await showDialog<void>(
@@ -408,7 +410,7 @@ Future<void> showEditOrganizationDialog(
                 organization.copyWith(
                   name: nameCtrl.text.trim(),
                   natureOfBusiness: businessCtrl.text.trim(),
-                  country: countryCtrl.text.trim(),
+                  country: countryDisplayName(countryCtrl.text),
                 ),
               );
               Navigator.pop(ctx);
